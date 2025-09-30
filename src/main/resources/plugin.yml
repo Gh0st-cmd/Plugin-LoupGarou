@@ -1,9 +1,9 @@
 name: LoupGarou
-version: 1.0.1
+version: 1.0.0
 main: org.gh0st.loupGarou.LoupGarouPlugin
 api-version: 1.21
 author: Gh0st_cmd
-description: Plugin de jeu Loup-Garou pour GrimFall
+description: Plugin de jeu Loup-Garou pour Minecraft
 
 # Dépendances (optionnel)
 depend: []
