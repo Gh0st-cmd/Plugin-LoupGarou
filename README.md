@@ -256,10 +256,10 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 ## 📊 Statistiques
 
-![GitHub stars](https://img.shields.io/github/stars/votre-nom/LoupGarouPlugin?style=social)
-![GitHub forks](https://img.shields.io/github/forks/votre-nom/LoupGarouPlugin?style=social)
-![GitHub issues](https://img.shields.io/github/issues/votre-nom/LoupGarouPlugin)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/votre-nom/LoupGarouPlugin)
+![GitHub stars](https://img.shields.io/github/stars/Gh0st-cmd/Plugin-LoupGarou-Minecraft?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Gh0st-cmd/Plugin-LoupGarou-Minecraft?style=social)
+![GitHub issues](https://img.shields.io/github/issues/Gh0st-cmd/Plugin-LoupGarou-Minecraft)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/Gh0st-cmd/Plugin-LoupGarou-Minecraft)
 
 ---
 
