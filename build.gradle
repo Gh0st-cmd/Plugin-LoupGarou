@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.gh0st'
+version = '1.0.0'
+description = 'Plugin Loup-Garou pour GrimFall'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+}
+
+processResources {
+    filteringCharset = 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand(project.properties)
+    }
+}
+
+jar {
+    archiveBaseName = 'LoupGarou'
+    archiveVersion = '1.0.0'
+}
