@@ -184,8 +184,8 @@ scoreboard:
 
 ### Avec Maven
 ```bash
-git clone https://github.com/votre-nom/LoupGarouPlugin.git
-cd LoupGarouPlugin
+git clone https://github.com/Gh0st-cmd/Plugin-LoupGarou.git
+cd Plugin-LoupGarou
 mvn clean package
 ```
 
@@ -193,8 +193,8 @@ Le fichier `.jar` sera généré dans `target/LoupGarou-1.0.0.jar`
 
 ### Avec Gradle
 ```bash
-git clone https://github.com/votre-nom/LoupGarouPlugin.git
-cd LoupGarouPlugin
+git clone https://github.com/Gh0st-cmd/Plugin-LoupGarou.git
+cd Plugin-LoupGarou
 gradle build
 ```
 
