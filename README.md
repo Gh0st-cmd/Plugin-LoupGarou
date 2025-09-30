@@ -241,8 +241,7 @@ Si vous trouvez un bug, merci de créer une [issue](../../issues) avec :
 ## 💬 Support
 
 - 📖 **Wiki** : [Lien vers le wiki](../../wiki)
-- 💬 **Discord** : [Rejoindre le serveur Discord](#)
-- 📧 **Email** : votre-email@exemple.com
+- 💬 **Discord** : [Rejoindre le serveur Discord](https://discord.gg/DGeGB5cmxQ)
 
 ## 📜 Licence
 
@@ -256,10 +255,10 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 
 ## 📊 Statistiques
 
-![GitHub stars](https://img.shields.io/github/stars/Gh0st-cmd/Plugin-LoupGarou-Minecraft?style=social)
-![GitHub forks](https://img.shields.io/github/forks/Gh0st-cmd/Plugin-LoupGarou-Minecraft?style=social)
-![GitHub issues](https://img.shields.io/github/issues/Gh0st-cmd/Plugin-LoupGarou-Minecraft)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/Gh0st-cmd/Plugin-LoupGarou-Minecraft)
+![GitHub stars](https://img.shields.io/github/stars/Gh0st-cmd/Plugin-LoupGarou?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Gh0st-cmd/Plugin-LoupGarou?style=social)
+![GitHub issues](https://img.shields.io/github/issues/Gh0st-cmd/Plugin-LoupGarou)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/Gh0st-cmd/Plugin-LoupGarou)
 
 ---
 
