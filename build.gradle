@@ -7,20 +7,38 @@ version = '1.0.0'
 description = 'Plugin Loup-Garou pour GrimFall'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
     mavenCentral()
+
+    // Dépôt officiel PaperMC
     maven {
         name = 'papermc'
         url = 'https://repo.papermc.io/repository/maven-public/'
     }
+
+    // Dépôt officiel EngineHub (WorldEdit / WorldGuard)
+    maven {
+        name = 'EngineHub'
+        url = 'https://maven.enginehub.org/repo/'
+    }
 }
 
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+    // API Paper 1.21.8 (exclusion des libs Mojang)
+    compileOnly('io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT') {
+        exclude group: 'com.google.guava', module: 'guava'
+        exclude group: 'com.google.code.gson', module: 'gson'
+        exclude group: 'it.unimi.dsi', module: 'fastutil'
+    }
+
+    // WorldEdit + WorldGuard (compatibles Java 21)
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.3.6'
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
 }
 
 processResources {

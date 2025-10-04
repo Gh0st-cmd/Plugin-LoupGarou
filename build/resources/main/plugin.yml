@@ -1,0 +1,51 @@
+name: LoupGarou
+version: 1.0.0
+main: org.gh0st.loupGarou.LoupGarouPlugin
+api-version: 1.21
+author: Gh0st-cmd
+description: Plugin de jeu Loup-Garou pour Minecraft
+
+# Dépendances (optionnel)
+depend: []
+softdepend: [WorldGuard]
+loadbefore: []
+
+# Commandes du plugin
+commands:
+  lg:
+    description: Commande principale du jeu Loup-Garou
+    usage: /lg <sous-commande>
+    permission: loupgarou.use
+    aliases: [loupgarou, werewolf]
+    permission-message: "§c❌ Vous n'avez pas la permission d'utiliser cette commande."
+  vote:
+    description: Voter pour éliminer un joueur
+    usage: /vote <joueur>
+    permission: loupgarou.vote
+    permission-message: "§c❌ Vous ne pouvez pas voter actuellement."
+
+# Permissions du plugin
+permissions:
+  loupgarou.*:
+    description: Toutes les permissions du plugin Loup-Garou
+    default: op
+    children:
+      - loupgarou.admin
+      - loupgarou.use
+      - loupgarou.vote
+  loupgarou.admin:
+    description: Permissions administrateur pour gérer les parties
+    default: op
+    children:
+      - loupgarou.use
+      - loupgarou.vote
+      - loupgarou.bypass
+  loupgarou.use:
+    description: Utiliser les commandes de base du Loup-Garou
+    default: true
+  loupgarou.vote:
+    description: Pouvoir voter pendant les parties
+    default: true
+  loupgarou.bypass:
+    description: Contourner les restrictions pendant les parties
+    default: op
