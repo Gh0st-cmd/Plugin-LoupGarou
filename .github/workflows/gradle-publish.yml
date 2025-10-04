@@ -114,7 +114,9 @@ jobs:
 
       # 6. Build Gradle (rebuild pour release)
       - name: 🏗️ Build with Gradle
-        run: ./gradlew build --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon
         env:
           GITHUB_TAG: ${{ github.ref_name }}
 
