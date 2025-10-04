@@ -1,54 +1,118 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
-group = 'org.gh0st'
+group = 'fr.loupgarou'
 version = '1.0.1'
 description = 'Plugin Loup-Garou pour Minecraft'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
     }
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
     mavenCentral()
-
-    // Dépôt officiel PaperMC
-    maven {
-        name = 'papermc'
-        url = 'https://repo.papermc.io/repository/maven-public/'
-    }
-
-    // Dépôt officiel EngineHub (WorldEdit / WorldGuard)
-    maven {
-        name = 'EngineHub'
-        url = 'https://maven.enginehub.org/repo/'
-    }
+    maven { name = 'spigotmc-repo'; url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+    maven { name = 'papermc'; url = 'https://repo.papermc.io/repository/maven-public/' }
+    maven { name = 'sk89q-repo'; url = 'https://maven.enginehub.org/repo/' }
 }
 
 dependencies {
-    // API Paper 1.21.8 (exclusion des libs Mojang)
-    compileOnly('io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT') {
-        exclude group: 'com.google.guava', module: 'guava'
-        exclude group: 'com.google.code.gson', module: 'gson'
-        exclude group: 'it.unimi.dsi', module: 'fastutil'
-    }
-
-    // WorldEdit + WorldGuard (compatibles Java 21)
-    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.3.6'
+    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
+    // compileOnly 'org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs.addAll(['-Xlint:deprecation', '-Xlint:unchecked'])
 }
 
 processResources {
     filteringCharset = 'UTF-8'
     filesMatching('plugin.yml') {
-        expand(project.properties)
+        expand(
+                'version': project.version,
+                'name': project.name,
+                'description': project.description
+        )
     }
 }
 
 jar {
-    archiveBaseName = 'LoupGarou'
-    archiveVersion = '1.0.1'
+    archiveBaseName.set('LoupGarou')
+    archiveVersion.set(project.version)
+    manifest {
+        attributes(
+                'Built-By': System.getProperty('user.name'),
+                'Build-Timestamp': new Date().format('yyyy-MM-dd HH:mm:ss'),
+                'Created-By': "Gradle ${gradle.gradleVersion}",
+                'Build-Jdk': "${System.getProperty('java.version')} (${System.getProperty('java.vendor')} ${System.getProperty('java.vm.version')})",
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('LoupGarou')
+    archiveVersion.set(project.version)
+    archiveClassifier.set('')
+    // minimize() // Décommente uniquement si tu sais que ça n'interfère pas
+}
+
+clean {
+    delete 'build'
+}
+
+task buildInfo {
+    doLast {
+        println ''
+        println '╔════════════════════════════════════════╗'
+        println '║     Plugin Loup-Garou Build Info      ║'
+        println '╚════════════════════════════════════════╝'
+        println "  Nom:         ${project.name}"
+        println "  Version:     ${project.version}"
+        println "  Description: ${project.description}"
+        println "  Java:        ${sourceCompatibility}"
+        println "  Gradle:      ${gradle.gradleVersion}"
+        println '═══════════════════════════════════════════'
+        println ''
+    }
+}
+
+build.dependsOn buildInfo
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+        showStandardStreams = false
+    }
+}
+
+task copyToServer(type: Copy, dependsOn: jar) {
+    from jar.archiveFile
+    into file('../test-server/plugins/')
+    doLast { println "✅ Plugin copié vers le serveur de test !" }
+}
+
+gradle.buildFinished {
+    println ''
+    println '╔════════════════════════════════════════╗'
+    println '║        Build terminé avec succès !     ║'
+    println '╚════════════════════════════════════════╝'
+    println "  📦 Fichier JAR: build/libs/LoupGarou-${version}.jar"
+    println '  🎮 Installation:'
+    println '     1. Copiez le JAR dans plugins/'
+    println '     2. Redémarrez le serveur'
+    println '     3. Utilisez /lg aide'
+    println '═══════════════════════════════════════════'
+    println ''
 }
