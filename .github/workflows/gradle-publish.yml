@@ -5,6 +5,7 @@
 
 name: Build Plugin Loup-Garou (Gradle)
 
+# Déclencher l'action sur push, PR et release
 on:
   push:
     branches: [ "main", "master", "develop" ]
@@ -22,9 +23,11 @@ jobs:
       packages: write
 
     steps:
+      # 1. Checkout du code
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Configuration de Java 17
       - name: ☕ Setup Java 17
         uses: actions/setup-java@v4
         with:
@@ -32,12 +35,19 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      # 3. Rendre le wrapper Gradle exécutable
+      - name: ✅ Make Gradle Wrapper executable
+        run: chmod +x gradlew
+
+      # 4. Build avec Gradle
       - name: 🏗️ Build with Gradle
         run: ./gradlew clean build --no-daemon
 
+      # 5. Lister les fichiers générés
       - name: 📋 List build artifacts
         run: ls -la build/libs/
 
+      # 6. Upload du fichier JAR comme artifact
       - name: 📤 Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
@@ -45,18 +55,21 @@ jobs:
           path: build/libs/*.jar
           retention-days: 30
 
+      # 7. Exécuter les tests
       - name: 🧪 Run tests
         run: ./gradlew test --no-daemon
         continue-on-error: true
 
+      # 8. Upload des résultats de tests
       - name: 📊 Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
-          path: build/test-results/test/
+          path: build/test-results/
           retention-days: 7
 
+  # Job de release automatique
   release:
     name: Create Release
     needs: build
@@ -75,6 +88,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: ✅ Make Gradle Wrapper executable
+        run: chmod +x gradlew
+
       - name: 🏗️ Build with Gradle
         run: ./gradlew clean build --no-daemon
 
@@ -86,8 +102,7 @@ jobs:
       - name: 🚀 Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            build/libs/*.jar
+          files: build/libs/*.jar
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: |
