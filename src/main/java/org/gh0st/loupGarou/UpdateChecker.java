@@ -151,12 +151,12 @@ public class UpdateChecker {
     private void notifyConsole() {
         plugin.getLogger().info("╔════════════════════════════════════════════╗");
         plugin.getLogger().info("║                                            ║");
-        plugin.getLogger().info("║  🆕 NOUVELLE VERSION DISPONIBLE ! 🆕       ║");
-        plugin.getLogger().info("║                                            ║");
+        plugin.getLogger().info("║  🆕 NOUVELLE VERSION DISPONIBLE ! 🆕         ║");
+        plugin.getLogger().info("║                                           ║");
         plugin.getLogger().info("║  Version actuelle : " + String.format("%-20s", currentVersion) + "  ║");
         plugin.getLogger().info("║  Nouvelle version : " + String.format("%-20s", latestVersion) + "  ║");
-        plugin.getLogger().info("║                                            ║");
-        plugin.getLogger().info("║  📥 Télécharger sur GitHub :               ║");
+        plugin.getLogger().info("║                                           ║");
+        plugin.getLogger().info("║  📥 Télécharger sur GitHub :                ║");
         plugin.getLogger().info("║  " + String.format("%-42s", downloadUrl) + "║");
         plugin.getLogger().info("║                                            ║");
         plugin.getLogger().info("╚════════════════════════════════════════════╝");
@@ -175,19 +175,15 @@ public class UpdateChecker {
         }
 
         player.sendMessage("");
-        player.sendMessage("§6§l╔════════════════════════════════════╗");
-        player.sendMessage("§6§l║  🆕 MISE À JOUR DISPONIBLE ! 🆕   ║");
-        player.sendMessage("§6§l╚════════════════════════════════════╝");
+        player.sendMessage("§6§l╔══════════════════════════════╗");
+        player.sendMessage("§6§l    MISE À JOUR DISPONIBLE !     ");
+        player.sendMessage("§6§l╚══════════════════════════════╝");
         player.sendMessage("");
         player.sendMessage("§e📦 Plugin Loup-Garou");
         player.sendMessage("§7   Version actuelle : §f" + currentVersion);
         player.sendMessage("§a   Nouvelle version : §f" + latestVersion);
         player.sendMessage("");
-        player.sendMessage("§e📥 Télécharger :");
-        player.sendMessage("§b   " + downloadUrl);
-        player.sendMessage("");
         player.sendMessage("§7   Cliquez pour ouvrir :");
-        player.sendMessage("§7   [§a§nTélécharger§7]");
 
         // Message cliquable
         net.kyori.adventure.text.Component downloadMessage = net.kyori.adventure.text.Component.text()
