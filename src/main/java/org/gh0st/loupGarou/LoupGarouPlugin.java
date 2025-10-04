@@ -107,10 +107,10 @@ public class LoupGarouPlugin extends JavaPlugin {
 
         // Messages de fin de chargement
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "╔════════════════════════════════════╗");
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  🐺 Plugin Loup-Garou activé ! 🐺   ║");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  🐺 Plugin Loup-Garou activé ! 🐺    ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║                                    ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Commandes : /lg aide              ║");
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Version : " + version + "                  ║");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Version : " + version + "                   ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Support : Minecraft 1.21.8+       ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Créé par : Gh0st-cmd              ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "╚════════════════════════════════════╝");

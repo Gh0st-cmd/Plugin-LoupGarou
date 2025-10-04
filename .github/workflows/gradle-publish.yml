@@ -120,6 +120,8 @@ jobs:
 
       - name: 📝 Generate Changelog
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           echo "# Changelog Loup-Garou" > CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "Update CHANGELOG for release ${{ env.new_tag }}" || echo "No changes to commit"
