@@ -3,9 +3,9 @@
 # GitHub Actions pour build automatique avec Gradle
 # ================================
 
-name: Build Plugin Loup-Garou (Gradle)
+name: Build Plugin Loup-Garou
 
-# Déclencher l'action sur push, pull request et release
+# Déclencher l'action sur push et pull request
 on:
   push:
     branches: [ "main", "master", "develop" ]
@@ -27,27 +27,27 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Rendre le wrapper Gradle exécutable
-      - name: ⚡ Make Gradle wrapper executable
-        run: chmod +x ./gradlew
-
-      # 3. Configuration de Java 21
-      - name: ☕ Setup Java 21
+      # 2. Configuration de Java 17
+      - name: ☕ Setup Java 17
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
           cache: gradle
 
+      # 3. Donner les permissions d'exécution à gradlew
+      - name: 🔧 Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       # 4. Build avec Gradle
       - name: 🏗️ Build with Gradle
-        run: ./gradlew clean shadowJar --no-daemon
+        run: ./gradlew build --no-daemon
 
       # 5. Lister les fichiers générés
       - name: 📋 List build artifacts
         run: ls -la build/libs/
 
-      # 6. Upload du JAR comme artifact
+      # 6. Upload du fichier JAR comme artifact
       - name: 📤 Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
@@ -55,9 +55,9 @@ jobs:
           path: build/libs/*.jar
           retention-days: 30
 
-      # 7. Tests (optionnel)
+      # 7. Tests (si vous en avez)
       - name: 🧪 Run tests
-        run: ./gradlew test
+        run: ./gradlew test --no-daemon
         continue-on-error: true
 
       # 8. Upload des résultats de tests
@@ -69,7 +69,7 @@ jobs:
           path: build/test-results/
           retention-days: 7
 
-  # Job de release automatique
+  # Job de release automatique (optionnel)
   release:
     name: Create Release
     needs: build
@@ -83,29 +83,26 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Rendre le wrapper Gradle exécutable
-      - name: ⚡ Make Gradle wrapper executable
-        run: chmod +x ./gradlew
-
-      # 3. Configuration de Java 21
-      - name: ☕ Setup Java 21
+      # 2. Configuration de Java
+      - name: ☕ Setup Java 17
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
-          cache: gradle
 
-      # 4. Build
+      # 3. Build
       - name: 🏗️ Build with Gradle
-        run: ./gradlew clean shadowJar --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon
 
-      # 5. Télécharger l'artifact
+      # 4. Télécharger l'artifact du job précédent
       - name: 📥 Download artifact
         uses: actions/download-artifact@v4
         with:
           name: LoupGarou-Plugin
 
-      # 6. Upload vers GitHub Release
+      # 5. Upload vers GitHub Release
       - name: 🚀 Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
@@ -128,7 +125,7 @@ jobs:
             ### 🌍 Compatibilité
             - Minecraft 1.21.8+
             - Spigot/Paper
-            - Java 21+
+            - Java 17+
             
             ### 📖 Documentation
             [Wiki](https://github.com/${{ github.repository }}/wiki) • [Discord](#)
