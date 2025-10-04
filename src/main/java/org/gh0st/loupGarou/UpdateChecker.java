@@ -152,12 +152,12 @@ public class UpdateChecker {
         plugin.getLogger().info("╔════════════════════════════════════════════╗");
         plugin.getLogger().info("║                                            ║");
         plugin.getLogger().info("║  🆕 NOUVELLE VERSION DISPONIBLE ! 🆕         ║");
-        plugin.getLogger().info("║                                           ║");
-        plugin.getLogger().info("║  Version actuelle : " + String.format("%-20s", currentVersion) + "  ║");
-        plugin.getLogger().info("║  Nouvelle version : " + String.format("%-20s", latestVersion) + "  ║");
-        plugin.getLogger().info("║                                           ║");
+        plugin.getLogger().info("║                                            ║");
+        plugin.getLogger().info("║  Version actuelle : " + String.format("%-20s", currentVersion) + "   ║");
+        plugin.getLogger().info("║  Nouvelle version : " + String.format("%-20s", latestVersion) + "   ║");
+        plugin.getLogger().info("║                                            ║");
         plugin.getLogger().info("║  📥 Télécharger sur GitHub :                ║");
-        plugin.getLogger().info("║  " + String.format("%-42s", downloadUrl) + "║");
+        plugin.getLogger().info("║  " + String.format("%-42s", downloadUrl)     );
         plugin.getLogger().info("║                                            ║");
         plugin.getLogger().info("╚════════════════════════════════════════════╝");
     }
