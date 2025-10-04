@@ -12,8 +12,6 @@ group = 'fr.loupgarou'
 version = '1.0.0'
 description = 'Plugin Loup-Garou pour Minecraft'
 
-targetCompatibility = JavaVersion.VERSION_17
-
 repositories {
     mavenCentral()
 
