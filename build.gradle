@@ -5,52 +5,61 @@
 
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.github.johnrengelman.shadow' version '8.1.1' // Pour créer un fat JAR si nécessaire
 }
 
 group = 'fr.loupgarou'
 version = '1.0.1'
 description = 'Plugin Loup-Garou pour Minecraft'
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
 
 repositories {
     mavenCentral()
 
-    // Repositories Minecraft
-    maven { name = 'spigotmc-repo'; url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
-    maven { name = 'papermc'; url = 'https://repo.papermc.io/repository/maven-public/' }
-    maven { name = 'sk89q-repo'; url = 'https://maven.enginehub.org/repo/' }
+    // Repository Spigot
+    maven {
+        name = 'spigotmc-repo'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+    }
+
+    // Repository PaperMC
+    maven {
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+
+    // Repository WorldGuard/WorldEdit
+    maven {
+        name = 'sk89q-repo'
+        url = 'https://maven.enginehub.org/repo/'
+    }
 }
 
 dependencies {
-    // Paper API
-    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+    // Paper API compatible Java 17
+    compileOnly 'io.papermc.paper:paper-api:1.21.0-R0.1-SNAPSHOT'
 
     // WorldGuard (optionnel)
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
 
-    // Spigot API alternative
+    // Alternative Spigot API (décommenter si vous n'utilisez pas Paper)
     // compileOnly 'org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT'
 }
 
-// ------------------------
-// Compilation et encoding
-// ------------------------
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-    options.compilerArgs.addAll(['-Xlint:deprecation', '-Xlint:unchecked'])
+// Configuration du processus de build
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
-// ------------------------
-// Traitement plugin.yml
-// ------------------------
-tasks.processResources {
+// Tâche pour traiter les ressources (plugin.yml, etc.)
+processResources {
     filteringCharset = 'UTF-8'
+
+    // Remplace les variables dans plugin.yml
     filesMatching('plugin.yml') {
         expand(
                 'version': project.version,
@@ -60,14 +69,19 @@ tasks.processResources {
     }
 }
 
-// ------------------------
-// Configuration du JAR
-// ------------------------
-tasks.jar {
-    archiveBaseName.set('LoupGarou')
-    archiveVersion.set(project.version)
-    archiveClassifier.set('')
+// Configuration de la compilation
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+}
 
+// Configuration du JAR
+jar {
+    archiveBaseName = 'LoupGarou'
+    archiveVersion = project.version
+    archiveClassifier = ''
+
+    // Ajouter un manifest
     manifest {
         attributes(
                 'Built-By': System.getProperty('user.name'),
@@ -80,29 +94,26 @@ tasks.jar {
     }
 }
 
-// ------------------------
-// Shadow JAR (Fat JAR)
-// ------------------------
-tasks.shadowJar {
-    archiveBaseName.set('LoupGarou')
-    archiveVersion.set(project.version)
-    archiveClassifier.set('')
+// Configuration du Shadow JAR (si vous avez des dépendances à inclure)
+shadowJar {
+    archiveBaseName = 'LoupGarou'
+    archiveVersion = project.version
+    archiveClassifier = ''
 
-    // Minimiser le JAR (attention avec les plugins Bukkit/Paper)
+    // Minimiser le JAR (enlever les classes non utilisées)
     minimize()
+
+    // Relocate des dépendances pour éviter les conflits
+    // relocate 'com.example', 'fr.loupgarou.libs.example'
 }
 
-// ------------------------
-// Nettoyage
-// ------------------------
-tasks.clean {
+// Tâche de nettoyage
+clean {
     delete 'build'
 }
 
-// ------------------------
-// Affichage des infos de build
-// ------------------------
-tasks.register('buildInfo') {
+// Tâche personnalisée pour afficher les informations de build
+task buildInfo {
     doLast {
         println ''
         println '╔════════════════════════════════════════╗'
@@ -111,20 +122,18 @@ tasks.register('buildInfo') {
         println "  Nom:         ${project.name}"
         println "  Version:     ${project.version}"
         println "  Description: ${project.description}"
-        println "  Java:        ${java.toolchain.languageVersion.get()}"
+        println "  Java:        ${sourceCompatibility}"
         println "  Gradle:      ${gradle.gradleVersion}"
         println '═══════════════════════════════════════════'
         println ''
     }
 }
-tasks.build {
-    dependsOn tasks.named('buildInfo')
-}
 
-// ------------------------
-// Tests
-// ------------------------
-tasks.test {
+// Exécuter buildInfo avant chaque build
+build.dependsOn buildInfo
+
+// Configuration des tests (si vous en avez)
+test {
     useJUnitPlatform()
     testLogging {
         events 'passed', 'skipped', 'failed'
@@ -133,21 +142,17 @@ tasks.test {
     }
 }
 
-// ------------------------
-// Copier le JAR vers serveur test
-// ------------------------
-tasks.register('copyToServer', Copy) {
-    dependsOn tasks.shadowJar
-    from tasks.shadowJar.flatMap { it.archiveFile }
-    into file('../test-server/plugins/') // Ajuster selon votre serveur
+// Tâche pour copier le JAR dans un dossier de serveur de test (optionnel)
+task copyToServer(type: Copy, dependsOn: jar) {
+    from jar.archiveFile
+    into file('../test-server/plugins/') // Ajustez le chemin selon votre configuration
+
     doLast {
         println "✅ Plugin copié vers le serveur de test !"
     }
 }
 
-// ------------------------
 // Messages de build
-// ------------------------
 gradle.buildFinished {
     println ''
     println '╔════════════════════════════════════════╗'
