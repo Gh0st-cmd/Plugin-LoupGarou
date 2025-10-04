@@ -16,9 +16,11 @@ public class LoupGarouPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // Dans la classe principale qui étend JavaPlugin
+        String version = this.getDescription().getVersion();
         // Message de démarrage avec style
         getLogger().info("=================================");
-        getLogger().info("   🐺 LOUP-GAROU PLUGIN v1.0.0 🐺");
+        getLogger().info("   🐺 LOUP-GAROU PLUGIN v" + version + " 🐺");
         getLogger().info("   Chargement en cours...");
         getLogger().info("=================================");
 
@@ -108,8 +110,8 @@ public class LoupGarouPlugin extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  🐺 Plugin Loup-Garou activé ! 🐺  ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║                                    ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Commandes : /lg aide              ║");
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Version : 1.0.0                  ║");
-        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Support : Minecraft 1.21.8       ║");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Version : " + version + "         ║");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "║  Support : Minecraft 1.21.8        ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "╚════════════════════════════════════╝");
 
         // Afficher les informations de configuration
