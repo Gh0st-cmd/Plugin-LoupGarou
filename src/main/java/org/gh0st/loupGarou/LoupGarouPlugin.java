@@ -200,9 +200,9 @@ public class LoupGarouPlugin extends JavaPlugin {
         }
 
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "╔════════════════════════════════════╗");
-        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "║   🐺 Plugin Loup-Garou arrêté 🐺   ║");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "║   🐺 Plugin Loup-Garou arrêté 🐺     ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "║                                    ║");
-        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "║  Merci d'avoir utilisé le plugin! ║");
+        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "║  Merci d'avoir utilisé le plugin!  ║");
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "╚════════════════════════════════════╝");
 
         getLogger().info("Plugin Loup-Garou arrêté proprement !");
