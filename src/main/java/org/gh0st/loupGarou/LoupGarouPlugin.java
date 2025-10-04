@@ -12,7 +12,7 @@ public class LoupGarouPlugin extends JavaPlugin {
     private ScoreboardManager scoreboardManager;
     private StatsManager statsManager;
     private WorldGuardIntegration worldGuardIntegration;
-    private UpdateChecker updateChecker;
+    private UpdateChecker updateChecker;  // ← AJOUT DE CETTE LIGNE
     private BukkitTask scoreboardUpdateTask;
 
     @Override
@@ -105,6 +105,16 @@ public class LoupGarouPlugin extends JavaPlugin {
 
         // Démarrage de la tâche de mise à jour du scoreboard
         startScoreboardUpdateTask();
+
+        // Vérification des mises à jour
+        try {
+            this.updateChecker = new UpdateChecker(this);
+            updateChecker.checkForUpdates();
+            updateChecker.startPeriodicCheck();
+            getLogger().info("✅ UpdateChecker initialisé");
+        } catch (Exception e) {
+            getLogger().warning("⚠️ Erreur lors de l'initialisation de l'UpdateChecker : " + e.getMessage());
+        }
 
         // Messages de fin de chargement
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "╔════════════════════════════════════╗");
@@ -265,6 +275,7 @@ public class LoupGarouPlugin extends JavaPlugin {
         getLogger().info("ScoreboardManager: " + (scoreboardManager != null ? "✅" : "❌"));
         getLogger().info("StatsManager: " + (statsManager != null ? "✅" : "❌"));
         getLogger().info("WorldGuardIntegration: " + (worldGuardIntegration != null ? "✅" : "❌"));
+        getLogger().info("UpdateChecker: " + (updateChecker != null ? "✅" : "❌"));
         getLogger().info("Scoreboard Update Task: " + (scoreboardUpdateTask != null && !scoreboardUpdateTask.isCancelled() ? "✅" : "❌"));
 
         if (gameManager != null) {
@@ -305,6 +316,10 @@ public class LoupGarouPlugin extends JavaPlugin {
 
     public WorldGuardIntegration getWorldGuardIntegration() {
         return worldGuardIntegration;
+    }
+
+    public UpdateChecker getUpdateChecker() {  // ← AJOUT DE CETTE MÉTHODE
+        return updateChecker;
     }
 
     /**

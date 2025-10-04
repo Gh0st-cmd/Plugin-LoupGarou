@@ -9,6 +9,7 @@ import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.logging.Level;
 
@@ -30,7 +31,7 @@ public class UpdateChecker {
 
     public UpdateChecker(LoupGarouPlugin plugin) {
         this.plugin = plugin;
-        this.currentVersion = plugin.getDescription().getVersion();
+        this.currentVersion = plugin.getPluginMeta().getVersion(); // ← CORRECTION
     }
 
     /**
@@ -48,7 +49,8 @@ public class UpdateChecker {
                 try {
                     plugin.getLogger().info("Vérification des mises à jour...");
 
-                    URL url = new URL(GITHUB_API_URL);
+                    URI uri = new URI(GITHUB_API_URL);
+                    URL url = uri.toURL();
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestMethod("GET");
                     connection.setRequestProperty("Accept", "application/vnd.github.v3+json");
