@@ -259,6 +259,7 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 ![GitHub forks](https://img.shields.io/github/forks/Gh0st-cmd/Plugin-LoupGarou?style=social)
 ![GitHub issues](https://img.shields.io/github/issues/Gh0st-cmd/Plugin-LoupGarou)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/Gh0st-cmd/Plugin-LoupGarou)
+![Build Status](https://github.com/Gh0st-cmd/Plugin-LoupGarou/actions/workflows/gradle-publish.yml/badge.svg)
 
 ---
 
