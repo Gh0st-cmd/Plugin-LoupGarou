@@ -8,7 +8,7 @@
         <!-- Informations du projet -->
         <groupId>org.gh0st</groupId>
         <artifactId>LoupGarou</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.0</version>
         <packaging>jar</packaging>
         <name>LoupGarou</name>
         <description>Plugin de jeu Loup-Garou pour Minecraft</description>

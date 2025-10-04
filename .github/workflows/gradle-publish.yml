@@ -104,13 +104,19 @@ jobs:
           echo "New tag: $new_tag"
           echo "new_tag=$new_tag" >> $GITHUB_ENV
 
-      # 5. Créer le nouveau tag
-      - name: 🔖 Create new tag
+      - name: 📌 Set next version
+        id: version
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag $new_tag
-          git push origin $new_tag
+          git fetch --tags
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "Last tag: $LAST_TAG"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$LAST_TAG"
+          PATCH=$((PATCH + 1))
+          NEXT_TAG="$MAJOR.$MINOR.$PATCH"
+          echo "Next tag: $NEXT_TAG"
+          git tag $NEXT_TAG
+          git push origin $NEXT_TAG
+          echo "GITHUB_TAG=$NEXT_TAG" >> $GITHUB_ENV
 
       # 6. Build Gradle (rebuild pour release)
       - name: 🏗️ Build with Gradle
@@ -118,7 +124,7 @@ jobs:
           chmod +x gradlew
           ./gradlew build --no-daemon
         env:
-          GITHUB_TAG: ${{ github.ref_name }}
+          GITHUB_TAG: ${{ env.GITHUB_TAG }}
 
       # 7. Télécharger l'artifact du job build
       - name: 📥 Download artifact
@@ -131,8 +137,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: build/libs/*.jar
-          tag_name: ${{ env.new_tag }}
-          name: Release ${{ env.new_tag }}
+          tag_name: ${{ env.GITHUB_TAG }}
+          name: Release ${{ env.GITHUB_TAG }}
           body: |
             ## 🐺 Plugin Loup-Garou ${{ env.new_tag }}
             
