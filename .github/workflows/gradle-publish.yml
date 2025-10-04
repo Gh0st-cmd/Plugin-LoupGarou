@@ -118,6 +118,13 @@ jobs:
           git push origin $NEXT_TAG
           echo "GITHUB_TAG=$NEXT_TAG" >> $GITHUB_ENV
 
+      - name: 📝 Generate Changelog
+        run: |
+          echo "# Changelog Loup-Garou" > CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "Update CHANGELOG for release ${{ env.new_tag }}" || echo "No changes to commit"
+          git push origin main
+
       # 6. Build Gradle (rebuild pour release)
       - name: 🏗️ Build with Gradle
         run: |
@@ -157,6 +164,6 @@ jobs:
             - Java 21+
             
             ### 📖 Documentation
-            [Wiki](https://github.com/${{ github.repository }}/wiki) • [Discord](#)
+            [Wiki](https://github.com/${{ github.repository }}/wiki) • [Discord](https://discord.gg/DGeGB5cmxQ)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
