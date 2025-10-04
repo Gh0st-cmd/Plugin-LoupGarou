@@ -1,3 +1,8 @@
+// ================================
+// FICHIER: build.gradle
+// Configuration Gradle pour le plugin Loup-Garou
+// ================================
+
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
@@ -9,31 +14,42 @@ description = 'Plugin Loup-Garou pour Minecraft'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
 }
 
 repositories {
     mavenCentral()
+
+    // Repositories Minecraft
     maven { name = 'spigotmc-repo'; url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
     maven { name = 'papermc'; url = 'https://repo.papermc.io/repository/maven-public/' }
     maven { name = 'sk89q-repo'; url = 'https://maven.enginehub.org/repo/' }
 }
 
 dependencies {
+    // Paper API
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+
+    // WorldGuard (optionnel)
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
+
+    // Spigot API alternative
     // compileOnly 'org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT'
 }
 
+// ------------------------
+// Compilation et encoding
+// ------------------------
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs.addAll(['-Xlint:deprecation', '-Xlint:unchecked'])
 }
 
-processResources {
+// ------------------------
+// Traitement plugin.yml
+// ------------------------
+tasks.processResources {
     filteringCharset = 'UTF-8'
     filesMatching('plugin.yml') {
         expand(
@@ -44,9 +60,14 @@ processResources {
     }
 }
 
-jar {
+// ------------------------
+// Configuration du JAR
+// ------------------------
+tasks.jar {
     archiveBaseName.set('LoupGarou')
     archiveVersion.set(project.version)
+    archiveClassifier.set('')
+
     manifest {
         attributes(
                 'Built-By': System.getProperty('user.name'),
@@ -59,18 +80,29 @@ jar {
     }
 }
 
-shadowJar {
+// ------------------------
+// Shadow JAR (Fat JAR)
+// ------------------------
+tasks.shadowJar {
     archiveBaseName.set('LoupGarou')
     archiveVersion.set(project.version)
     archiveClassifier.set('')
-    // minimize() // Décommente uniquement si tu sais que ça n'interfère pas
+
+    // Minimiser le JAR (attention avec les plugins Bukkit/Paper)
+    minimize()
 }
 
-clean {
+// ------------------------
+// Nettoyage
+// ------------------------
+tasks.clean {
     delete 'build'
 }
 
-task buildInfo {
+// ------------------------
+// Affichage des infos de build
+// ------------------------
+tasks.register('buildInfo') {
     doLast {
         println ''
         println '╔════════════════════════════════════════╗'
@@ -79,16 +111,20 @@ task buildInfo {
         println "  Nom:         ${project.name}"
         println "  Version:     ${project.version}"
         println "  Description: ${project.description}"
-        println "  Java:        ${sourceCompatibility}"
+        println "  Java:        ${java.toolchain.languageVersion.get()}"
         println "  Gradle:      ${gradle.gradleVersion}"
         println '═══════════════════════════════════════════'
         println ''
     }
 }
+tasks.build {
+    dependsOn tasks.named('buildInfo')
+}
 
-build.dependsOn buildInfo
-
-test {
+// ------------------------
+// Tests
+// ------------------------
+tasks.test {
     useJUnitPlatform()
     testLogging {
         events 'passed', 'skipped', 'failed'
@@ -97,12 +133,21 @@ test {
     }
 }
 
-task copyToServer(type: Copy, dependsOn: jar) {
-    from jar.archiveFile
-    into file('../test-server/plugins/')
-    doLast { println "✅ Plugin copié vers le serveur de test !" }
+// ------------------------
+// Copier le JAR vers serveur test
+// ------------------------
+tasks.register('copyToServer', Copy) {
+    dependsOn tasks.shadowJar
+    from tasks.shadowJar.flatMap { it.archiveFile }
+    into file('../test-server/plugins/') // Ajuster selon votre serveur
+    doLast {
+        println "✅ Plugin copié vers le serveur de test !"
+    }
 }
 
+// ------------------------
+// Messages de build
+// ------------------------
 gradle.buildFinished {
     println ''
     println '╔════════════════════════════════════════╗'
