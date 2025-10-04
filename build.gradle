@@ -3,8 +3,8 @@ plugins {
 }
 
 group = 'org.gh0st'
-version = '1.0.0'
-description = 'Plugin Loup-Garou pour GrimFall'
+version = '1.0.1'
+description = 'Plugin Loup-Garou pour Minecraft'
 
 java {
     toolchain {
@@ -50,5 +50,5 @@ processResources {
 
 jar {
     archiveBaseName = 'LoupGarou'
-    archiveVersion = '1.0.0'
+    archiveVersion = '1.0.1'
 }
