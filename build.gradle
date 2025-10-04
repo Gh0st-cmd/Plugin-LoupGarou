@@ -1,17 +1,44 @@
+// ================================
+// FICHIER: build.gradle
+// Configuration Gradle pour le plugin Loup-Garou
+// ================================
+
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '9.1.1'
+    id 'com.github.johnrengelman.shadow' version '8.1.1' // Version compatible Gradle 9
+}
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
 }
 
 group = 'fr.loupgarou'
 version = '1.0.1'
 description = 'Plugin Loup-Garou pour Minecraft'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 repositories {
     mavenCentral()
-    maven { name = 'spigotmc-repo'; url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
-    maven { name = 'papermc'; url = 'https://repo.papermc.io/repository/maven-public/' }
-    maven { name = 'sk89q-repo'; url = 'https://maven.enginehub.org/repo/' }
+
+    // Repository PaperMC
+    maven {
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+
+    // Repository WorldGuard/WorldEdit
+    maven {
+        name = 'sk89q-repo'
+        url = 'https://maven.enginehub.org/repo/'
+    }
 }
 
 dependencies {
@@ -19,40 +46,25 @@ dependencies {
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
 }
 
-// ✅ Définir la version Java correctement pour Gradle 9+
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
+// Configuration Java
 tasks.withType(JavaCompile).configureEach {
     javaCompiler = javaToolchains.compilerFor {
         languageVersion = JavaLanguageVersion.of(21)
     }
     options.encoding = 'UTF-8'
-    options.release.set(21) // force la version cible
+    options.release.set(21)
     options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
 }
 
-tasks.withType(org.gradle.jvm.tasks.Jar).configureEach {
-    // Assure que le manifest est compatible
-    manifest {
-        attributes(
-                'Implementation-Title': project.name,
-                'Implementation-Version': project.version
-        )
-    }
-}
-
-tasks.withType(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar).configureEach {
+// Configuration du ShadowJar
+shadowJar {
     archiveBaseName.set('LoupGarou')
     archiveVersion.set(project.version)
     archiveClassifier.set('')
     mergeServiceFiles()
 }
 
-// Process Resources
+// ProcessResources
 processResources {
     filteringCharset = 'UTF-8'
     filesMatching('plugin.yml') {
@@ -62,93 +74,4 @@ processResources {
                 'description': project.description
         )
     }
-}
-
-// Compilation
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
-}
-
-// JAR
-jar {
-    archiveBaseName = 'LoupGarou'
-    archiveVersion = project.version
-    archiveClassifier = ''
-    manifest {
-        attributes(
-                'Built-By': System.getProperty('user.name'),
-                'Build-Timestamp': new Date().format('yyyy-MM-dd HH:mm:ss'),
-                'Created-By': "Gradle ${gradle.gradleVersion}",
-                'Build-Jdk': "${System.getProperty('java.version')} (${System.getProperty('java.vendor')} ${System.getProperty('java.vm.version')})",
-                'Implementation-Title': project.name,
-                'Implementation-Version': project.version
-        )
-    }
-}
-
-// Shadow JAR
-shadowJar {
-    archiveBaseName = 'LoupGarou'
-    archiveVersion = project.version
-    archiveClassifier = ''
-    minimize()
-}
-
-// Clean
-clean {
-    delete 'build'
-}
-
-// Build Info
-task buildInfo {
-    doLast {
-        println ''
-        println '╔════════════════════════════════════════╗'
-        println '║     Plugin Loup-Garou Build Info      ║'
-        println '╚════════════════════════════════════════╝'
-        println "  Nom:         ${project.name}"
-        println "  Version:     ${project.version}"
-        println "  Description: ${project.description}"
-        println "  Java:        21"
-        println "  Gradle:      ${gradle.gradleVersion}"
-        println '═══════════════════════════════════════════'
-        println ''
-    }
-}
-
-build.dependsOn buildInfo
-
-// Tests
-test {
-    useJUnitPlatform()
-    testLogging {
-        events 'passed', 'skipped', 'failed'
-        exceptionFormat 'full'
-        showStandardStreams = false
-    }
-}
-
-// Copier JAR vers serveur de test
-task copyToServer(type: Copy, dependsOn: jar) {
-    from jar.archiveFile
-    into file('../test-server/plugins/')
-    doLast {
-        println "✅ Plugin copié vers le serveur de test !"
-    }
-}
-
-// Messages de build
-gradle.buildFinished {
-    println ''
-    println '╔════════════════════════════════════════╗'
-    println '║        Build terminé avec succès !     ║'
-    println '╚════════════════════════════════════════╝'
-    println "  📦 Fichier JAR: build/libs/LoupGarou-${version}.jar"
-    println '  🎮 Installation:'
-    println '     1. Copiez le JAR dans plugins/'
-    println '     2. Redémarrez le serveur'
-    println '     3. Utilisez /lg aide'
-    println '═══════════════════════════════════════════'
-    println ''
 }
