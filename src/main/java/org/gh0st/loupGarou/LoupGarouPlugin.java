@@ -109,7 +109,7 @@ public class LoupGarouPlugin extends JavaPlugin {
         // Vérification des mises à jour
         try {
             this.updateChecker = new UpdateChecker(this);
-            updateChecker.checkForUpdates();
+            //updateChecker.checkForUpdates();
             updateChecker.startPeriodicCheck();
             getLogger().info("✅ UpdateChecker initialisé");
         } catch (Exception e) {

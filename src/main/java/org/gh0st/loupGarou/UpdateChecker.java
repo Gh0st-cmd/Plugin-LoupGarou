@@ -31,11 +31,11 @@ public class UpdateChecker {
 
     public UpdateChecker(LoupGarouPlugin plugin) {
         this.plugin = plugin;
-        this.currentVersion = plugin.getPluginMeta().getVersion(); // ← CORRECTION
+        this.currentVersion = plugin.getPluginMeta().getVersion();
     }
 
     /**
-     * Vérifie les mises à jour de manière asynchrone
+     * Vérifie les mises à jour de manière asynchrone (le cœur de la logique)
      */
     public void checkForUpdates() {
         if (!plugin.getConfigManager().getConfig().getBoolean("update-checker.enabled", true)) {
@@ -81,7 +81,7 @@ public class UpdateChecker {
                             updateAvailable = true;
                             checkFailed = false;
 
-                            // Notifier dans la console
+                            // Notifier dans la console (doit être fait de manière synchrone, mais l'appel de log est sûr)
                             new BukkitRunnable() {
                                 @Override
                                 public void run() {
@@ -222,21 +222,23 @@ public class UpdateChecker {
     }
 
     /**
-     * Vérifie périodiquement les mises à jour (toutes les heures)
+     * Vérifie périodiquement les mises à jour (toutes les heures).
+     * Effectue la première vérification immédiatement.
      */
     public void startPeriodicCheck() {
         if (!plugin.getConfigManager().getConfig().getBoolean("update-checker.enabled", true)) {
             return;
         }
 
-        long interval = plugin.getConfigManager().getConfig().getLong("update-checker.check-interval", 3600) * 20L; // En secondes
+        long interval = plugin.getConfigManager().getConfig().getLong("update-checker.check-interval", 3600) * 20L; // Convertir en ticks
 
         new BukkitRunnable() {
             @Override
             public void run() {
                 checkForUpdates();
             }
-        }.runTaskTimerAsynchronously(plugin, 20L, interval); // Première vérification après 1 seconde, puis toutes les X secondes
+            // FIX : Passage de 20L à 0L pour exécuter la première vérification immédiatement
+        }.runTaskTimerAsynchronously(plugin, 0L, interval);
     }
 
     // Getters
