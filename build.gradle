@@ -52,6 +52,9 @@ dependencies {
     // WorldGuard (optionnel)
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
 
+    // Gson pour parser le JSON (inclus dans le JAR car nécessaire)
+    implementation 'com.google.code.gson:gson:2.10.1'
+
     // Alternative Spigot API (décommenter si vous n'utilisez pas Paper)
     // compileOnly 'org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT'
 }

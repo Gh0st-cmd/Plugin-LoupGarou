@@ -48,6 +48,10 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
             case "setspawn":
                 return handleSetSpawn(sender);
 
+            case "update":
+            case "version":
+                return handleUpdate(sender);
+
             case "kill":
             case "tuer":
                 return handleKill(sender, args);
@@ -224,6 +228,48 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§7Monde: §f" + loc.getWorld().getName());
         player.sendMessage("§7Coordonnées: §f" + String.format("%.2f, %.2f, %.2f", loc.getX(), loc.getY(), loc.getZ()));
         player.sendMessage("§e💡 Les joueurs seront téléportés ici au début des parties");
+
+        return true;
+    }
+
+    private boolean handleUpdate(CommandSender sender) {
+        if (!sender.hasPermission("loupgarou.admin")) {
+            sender.sendMessage(Messages.NO_PERMISSION);
+            return true;
+        }
+
+        UpdateChecker checker = plugin.getUpdateChecker();
+
+        if (checker == null) {
+            sender.sendMessage("§c❌ Le vérificateur de mises à jour n'est pas disponible.");
+            return true;
+        }
+
+        sender.sendMessage("§e⏳ Vérification des mises à jour...");
+
+        // Vérifier de manière asynchrone
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            checker.checkForUpdates();
+
+            // Attendre un peu que la vérification se termine
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (checker.isUpdateAvailable()) {
+                    sender.sendMessage("§a✅ Une nouvelle version est disponible !");
+                    sender.sendMessage("§7   Version actuelle : §f" + checker.getCurrentVersion());
+                    sender.sendMessage("§a   Nouvelle version : §f" + checker.getLatestVersion());
+                    sender.sendMessage("§e📥 Télécharger : §b" + checker.getDownloadUrl());
+
+                    if (sender instanceof Player) {
+                        checker.notifyPlayer((Player) sender);
+                    }
+                } else if (checker.hasCheckFailed()) {
+                    sender.sendMessage("§c❌ Impossible de vérifier les mises à jour.");
+                    sender.sendMessage("§7Vérifiez votre connexion internet ou réessayez plus tard.");
+                } else {
+                    sender.sendMessage("§a✅ Vous utilisez la dernière version ! §7(v" + checker.getCurrentVersion() + ")");
+                }
+            }, 40L); // Attendre 2 secondes
+        });
 
         return true;
     }
@@ -548,6 +594,7 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§f/lg stop §7- Arrêter la partie en cours");
             sender.sendMessage("§f/lg reload §7- Recharger la configuration");
             sender.sendMessage("§f/lg setspawn §7- Définir le spawn de jeu");
+            sender.sendMessage("§f/lg update §7- Vérifier les mises à jour");
             sender.sendMessage("§f/lg statut §7- Voir le statut de la partie");
             sender.sendMessage("§f/lg liste §7- Voir tous les joueurs et leurs rôles");
             sender.sendMessage("");

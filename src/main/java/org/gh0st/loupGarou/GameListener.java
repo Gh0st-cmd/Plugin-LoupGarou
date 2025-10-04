@@ -69,6 +69,16 @@ public class GameListener implements Listener {
                 }, 20L);
             }
         }
+
+        // Vérifier les mises à jour pour les admins
+        if (player.hasPermission("loupgarou.admin")) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                UpdateChecker checker = plugin.getUpdateChecker();
+                if (checker != null && checker.isUpdateAvailable()) {
+                    checker.notifyPlayer(player);
+                }
+            }, 60L); // Notifier après 3 secondes
+        }
     }
 
     @EventHandler

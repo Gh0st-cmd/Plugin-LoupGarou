@@ -100,6 +100,11 @@ public class ConfigManager {
         // Configuration de debug
         config.set("debug.enabled", false);
         config.set("debug.verbose", false);
+
+        // Configuration du vérificateur de mises à jour
+        config.set("update-checker.enabled", true);
+        config.set("update-checker.check-interval", 3600); // En secondes (1 heure)
+        config.set("update-checker.notify-admins", true); // Notifier les admins à la connexion
     }
 
     private boolean addMissingValues() {
@@ -156,6 +161,18 @@ public class ConfigManager {
         }
         if (!config.contains("messages.wrong-world")) {
             config.set("messages.wrong-world", "§c❌ Le jeu Loup-Garou n'est disponible que dans le monde '{world}' !");
+            modified = true;
+        }
+        if (!config.contains("update-checker.enabled")) {
+            config.set("update-checker.enabled", true);
+            modified = true;
+        }
+        if (!config.contains("update-checker.check-interval")) {
+            config.set("update-checker.check-interval", 3600);
+            modified = true;
+        }
+        if (!config.contains("update-checker.notify-admins")) {
+            config.set("update-checker.notify-admins", true);
             modified = true;
         }
 

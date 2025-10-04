@@ -12,6 +12,7 @@ public class LoupGarouPlugin extends JavaPlugin {
     private ScoreboardManager scoreboardManager;
     private StatsManager statsManager;
     private WorldGuardIntegration worldGuardIntegration;
+    private UpdateChecker updateChecker;
     private BukkitTask scoreboardUpdateTask;
 
     @Override
