@@ -8,13 +8,6 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1' // Version compatible Gradle 9
 }
 
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-    }
-}
-
 group = 'fr.loupgarou'
 version = '1.0.1'
 description = 'Plugin Loup-Garou pour Minecraft'
@@ -46,7 +39,7 @@ dependencies {
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
 }
 
-// Configuration Java
+// Compilation Java
 tasks.withType(JavaCompile).configureEach {
     javaCompiler = javaToolchains.compilerFor {
         languageVersion = JavaLanguageVersion.of(21)
@@ -56,7 +49,7 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
 }
 
-// Configuration du ShadowJar
+// ShadowJar
 shadowJar {
     archiveBaseName.set('LoupGarou')
     archiveVersion.set(project.version)
