@@ -1,18 +1,14 @@
 # ================================
 # FICHIER: .github/workflows/gradle-publish.yml
-# GitHub Actions pour build automatique avec Gradle
+# GitHub Actions pour build automatique et release avec Gradle
 # ================================
 
-name: Build Plugin Loup-Garou
+name: Build & Release Plugin Loup-Garou
 
-# Déclencher l'action sur push et pull request
 on:
   push:
     branches: [ "main", "master", "develop" ]
-  pull_request:
-    branches: [ "main", "master" ]
-  release:
-    types: [created]
+  workflow_dispatch:  # permet de lancer manuellement
 
 jobs:
   build:
@@ -27,7 +23,7 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Configuration de Java 17
+      # 2. Configuration de Java 21
       - name: ☕ Setup Java 21
         uses: actions/setup-java@v4
         with:
@@ -55,7 +51,7 @@ jobs:
           path: build/libs/*.jar
           retention-days: 30
 
-      # 7. Tests (si vous en avez)
+      # 7. Tests
       - name: 🧪 Run tests
         run: ./gradlew test --no-daemon
         continue-on-error: true
@@ -69,60 +65,90 @@ jobs:
           path: build/test-results/
           retention-days: 7
 
-  # Job de release automatique (optionnel)
-release:
-  name: Create Release
-  needs: build
-  runs-on: ubuntu-latest
-  permissions:
-    contents: write
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
-  steps:
-    - name: 📥 Checkout repository
-      uses: actions/checkout@v4
+    steps:
+      # 1. Checkout du code
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # nécessaire pour récupérer tous les tags
 
-    - name: ☕ Setup Java 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
+      # 2. Configuration de Java 21
+      - name: ☕ Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
-    - name: 🏗️ Build with Gradle
-      run: |
-        chmod +x gradlew
-        ./gradlew build --no-daemon
+      # 3. Récupérer le dernier tag
+      - name: 🧮 Get latest tag
+        id: get_tag
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0")
+          echo "Latest tag: $latest_tag"
+          echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
-    - name: 📥 Download artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: LoupGarou-Plugin
+      # 4. Incrémenter le patch (1.0.0 -> 1.0.1)
+      - name: 🔢 Bump patch version
+        id: bump
+        run: |
+          IFS='.' read -r major minor patch <<< "${latest_tag#v}"
+          patch=$((patch+1))
+          new_tag="$major.$minor.$patch"
+          echo "New tag: $new_tag"
+          echo "new_tag=$new_tag" >> $GITHUB_ENV
 
-    - name: 🚀 Upload Release Asset
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/libs/*.jar
-        tag_name: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
-        body: |
-          ## 🐺 Plugin Loup-Garou ${{ github.ref_name }}
-          
-          ### 📥 Installation
-          1. Téléchargez le fichier `.jar` ci-dessous
-          2. Placez-le dans le dossier `plugins/` de votre serveur
-          3. Redémarrez le serveur
-          4. Utilisez `/lg aide` pour commencer !
-          
-          ### ✨ Changements
-          Voir le [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
-          
-          ### 🌍 Compatibilité
-          - Minecraft 1.21.8+
-          - Spigot/Paper
-          - Java 21+
-          
-          ### 📖 Documentation
-          [Wiki](https://github.com/${{ github.repository }}/wiki) • [Discord](#)
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 5. Créer le nouveau tag
+      - name: 🔖 Create new tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag $new_tag
+          git push origin $new_tag
+
+      # 6. Build Gradle (rebuild pour release)
+      - name: 🏗️ Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon
+
+      # 7. Télécharger l'artifact du job build
+      - name: 📥 Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: LoupGarou-Plugin
+
+      # 8. Créer la Release GitHub
+      - name: 🚀 Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/libs/*.jar
+          tag_name: ${{ env.new_tag }}
+          name: Release ${{ env.new_tag }}
+          body: |
+            ## 🐺 Plugin Loup-Garou ${{ env.new_tag }}
+            
+            ### 📥 Installation
+            1. Téléchargez le fichier `.jar` ci-dessous
+            2. Placez-le dans le dossier `plugins/` de votre serveur
+            3. Redémarrez le serveur
+            4. Utilisez `/lg aide` pour commencer !
+            
+            ### ✨ Changements
+            Voir le [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+            
+            ### 🌍 Compatibilité
+            - Minecraft 1.21.8+
+            - Spigot/Paper
+            - Java 21+
+            
+            ### 📖 Documentation
+            [Wiki](https://github.com/${{ github.repository }}/wiki) • [Discord](#)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
