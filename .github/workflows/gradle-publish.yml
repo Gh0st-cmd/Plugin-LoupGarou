@@ -117,6 +117,8 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew build --no-daemon
+        env:
+          GITHUB_REF_NAME: ${{ env.new_tag }}
 
       # 7. Télécharger l'artifact du job build
       - name: 📥 Download artifact
