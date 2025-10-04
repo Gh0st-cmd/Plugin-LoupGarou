@@ -93,6 +93,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
       # 4. Build
       - name: 🏗️ Build with Gradle
