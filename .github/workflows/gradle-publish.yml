@@ -28,10 +28,10 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Configuration de Java 17
-      - name: ☕ Setup Java 17
+      - name: ☕ Setup Java 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: gradle
 
@@ -84,10 +84,10 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Configuration de Java
-      - name: ☕ Setup Java 17
+      - name: ☕ Setup Java 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       # 3. Build
@@ -125,7 +125,7 @@ jobs:
             ### 🌍 Compatibilité
             - Minecraft 1.21.8+
             - Spigot/Paper
-            - Java 17+
+            - Java 21+
             
             ### 📖 Documentation
             [Wiki](https://github.com/${{ github.repository }}/wiki) • [Discord](#)

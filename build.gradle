@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'fr.loupgarou'
-version = '1.0.0'
+version = '1.0.1'
 description = 'Plugin Loup-Garou pour Minecraft'
 
 repositories {
@@ -48,7 +48,7 @@ dependencies {
 // Configuration du processus de build
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
