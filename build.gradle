@@ -12,7 +12,6 @@ group = 'fr.loupgarou'
 version = '1.0.0'
 description = 'Plugin Loup-Garou pour Minecraft'
 
-sourceCompatibility = JavaVersion.VERSION_17
 targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
@@ -122,7 +121,6 @@ task buildInfo {
         println "  Nom:         ${project.name}"
         println "  Version:     ${project.version}"
         println "  Description: ${project.description}"
-        println "  Java:        ${sourceCompatibility}"
         println "  Gradle:      ${gradle.gradleVersion}"
         println '═══════════════════════════════════════════'
         println ''
