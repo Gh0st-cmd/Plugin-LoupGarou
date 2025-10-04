@@ -9,14 +9,18 @@ plugins {
 }
 
 group = 'fr.loupgarou'
+// Récupérer le tag GitHub si défini
 def gitTag = System.getenv("GITHUB_TAG")
+
+// Si on a un tag valide, on l'utilise comme version, sinon fallback à la version actuelle
 if (gitTag != null && gitTag.matches(/\d+\.\d+\.\d+/)) {
     version = gitTag
-} else {
-    version = '0.0.0-SNAPSHOT'
+} else if (version == 'unspecified' || version == '0.0.0-SNAPSHOT') {
+    version = '1.0.0' // version par défaut
 }
 
 println "Plugin version: $version"
+
 description = 'Plugin Loup-Garou pour Minecraft'
 
 repositories {

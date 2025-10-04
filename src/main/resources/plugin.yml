@@ -1,5 +1,5 @@
 name: LoupGarou
-version: 1.0.0
+version: ${version}
 main: org.gh0st.loupGarou.LoupGarouPlugin
 api-version: 1.21
 author: Gh0st-cmd
