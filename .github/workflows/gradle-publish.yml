@@ -114,11 +114,9 @@ jobs:
 
       # 6. Build Gradle (rebuild pour release)
       - name: 🏗️ Build with Gradle
-        run: |
-          chmod +x gradlew
-          ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon
         env:
-          GITHUB_REF_NAME: ${{ env.new_tag }}
+          GITHUB_TAG: ${{ github.ref_name }}
 
       # 7. Télécharger l'artifact du job build
       - name: 📥 Download artifact

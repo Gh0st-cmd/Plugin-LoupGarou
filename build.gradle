@@ -12,7 +12,7 @@ group = 'fr.loupgarou'
 // ================================
 // Gestion automatique de la version selon le tag GitHub
 // ================================
-def gitTag = System.getenv("GITHUB_REF_NAME")
+def gitTag = System.getenv("GITHUB_TAG")
 if (gitTag != null && gitTag.matches(/\d+\.\d+\.\d+/)) {
     version = gitTag
 } else {
