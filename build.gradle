@@ -10,11 +10,6 @@ plugins {
 group = 'fr.loupgarou'
 description = 'Plugin Loup-Garou pour Minecraft'
 
-// --- Global Java Compatibility Settings ---
-// Définition de la version de compilation et d'exécution du code à un niveau global
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
-
 // --- Gestion de la Version par Tag GitHub ---
 def gitTag = System.getenv("GITHUB_TAG")
 
@@ -33,6 +28,9 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+    // Définition de la version de compilation et d'exécution du code (déplacé ici pour corriger l'erreur de portée 'sourceCompatibility')
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 // Configuration de la compilation
