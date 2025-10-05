@@ -121,6 +121,7 @@ jobs:
           ./gradlew build --no-daemon
         env:
           GITHUB_TAG: ${{ env.GITHUB_TAG }}
+          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
 
       - name: 📥 Download artifact
         uses: actions/download-artifact@v4
