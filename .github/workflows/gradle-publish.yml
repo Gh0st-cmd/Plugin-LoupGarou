@@ -116,13 +116,20 @@ jobs:
           git commit -m "Update CHANGELOG for release ${{ env.new_tag }}" || echo "No changes to commit"
           git push origin main
 
-      - name: 🏗️ Build with Gradle
+      - name: ☕ Ensure Java 21 for Shadow
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: gradle
+
+      - name: 🏗️ Build with Gradle (Java 21)
         run: |
           chmod +x gradlew
-          ./gradlew build shadowJar --no-daemon
+          ./gradlew clean shadowJar --no-daemon
         env:
           GITHUB_TAG: ${{ env.GITHUB_TAG }}
-          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
+        shell: bash
 
       - name: 📥 Download artifact
         uses: actions/download-artifact@v4
