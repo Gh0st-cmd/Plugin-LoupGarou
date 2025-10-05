@@ -1,33 +1,49 @@
+import org.gradle.api.JavaVersion
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'fr.loupgarou'
-// Récupérer le tag GitHub si défini
+description = 'Plugin Loup-Garou pour Minecraft'
+
+// --- Gestion de la Version par Tag GitHub ---
 def gitTag = System.getenv("GITHUB_TAG")
 
 // Si on a un tag valide, on l'utilise comme version, sinon fallback à la version actuelle
 if (gitTag != null && gitTag.matches(/\d+\.\d+\.\d+/)) {
     version = gitTag
 } else if (version == 'unspecified' || version == '0.0.0-SNAPSHOT') {
-    version = '1.0.0' // version par défaut
+    version = '1.0.0-SNAPSHOT' // Utilisation d'un SNAPSHOT par défaut en local
 }
 
 println "Plugin version: $version"
 
-description = 'Plugin Loup-Garou pour Minecraft'
+// --- Configuration Java Toolchain (Correction de l'erreur Major Version 65) ---
+java {
+    // Configuration de la Toolchain pour s'assurer que Gradle utilise Java 21 pour l'exécution des tâches (:shadowJar)
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
+// Définition de la version de compilation et d'exécution du code
+tasks.withType(JavaCompile) {
+    sourceCompatibility = JavaVersion.VERSION_21.toString()
+    targetCompatibility = JavaVersion.VERSION_21.toString()
+    options.encoding = 'UTF-8'
+    // Activation des warnings de dépréciation
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+}
+
+// --- Définition des Dépôts ---
 repositories {
     mavenCentral()
 
-    // Repository Spigot
-    maven {
-        name = 'spigotmc-repo'
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
-    }
-
-    // Repository PaperMC
+    // Repository PaperMC (recommandé pour les versions récentes)
     maven {
         name = 'papermc'
         url = 'https://repo.papermc.io/repository/maven-public/'
@@ -39,38 +55,29 @@ repositories {
         url = 'https://maven.enginehub.org/repo/'
     }
 
-    // ← NOUVEAU : Repository bStats
+    // Repository bStats
     maven {
         name = 'CodeMC'
         url = 'https://repo.codemc.org/repository/maven-public/'
     }
 }
 
+// --- Dépendances ---
 dependencies {
     // Paper API (recommandé pour Minecraft 1.21+)
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
 
-    // WorldGuard (optionnel)
+    // WorldGuard (optionnel, assurez-vous de prendre la bonne version, 7.0.9 ici)
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
 
-    // Gson pour parser le JSON (inclus dans le JAR car nécessaire)
+    // Gson pour parser le JSON
     implementation 'com.google.code.gson:gson:2.10.1'
 
-    // ← NOUVEAU : bStats (sera inclus dans le JAR via shadowJar)
+    // bStats (sera inclus dans le JAR via shadowJar)
     implementation 'org.bstats:bstats-bukkit:3.0.2'
-
-    // Alternative Spigot API (décommenter si vous n'utilisez pas Paper)
-    // compileOnly 'org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT'
 }
 
-// Configuration du processus de build
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-// Tâche pour traiter les ressources (plugin.yml, etc.)
+// --- Tâche pour traiter les ressources (plugin.yml, etc.) ---
 processResources {
     filteringCharset = 'UTF-8'
 
@@ -84,19 +91,13 @@ processResources {
     }
 }
 
-// Configuration de la compilation
-tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
-}
-
-// Configuration du JAR
+// --- Configuration du JAR (non-shadowed) ---
 jar {
     archiveBaseName = 'LoupGarou'
     archiveVersion = project.version
     archiveClassifier = ''
 
-    // Ajouter un manifest
+    // Ajouter un manifest détaillé
     manifest {
         attributes(
                 'Built-By': System.getProperty('user.name'),
@@ -109,7 +110,7 @@ jar {
     }
 }
 
-// ← MODIFIÉ : Configuration du Shadow JAR avec bStats
+// --- Configuration du Shadow JAR (le JAR final) ---
 shadowJar {
     archiveBaseName = 'LoupGarou'
     archiveVersion = project.version
@@ -118,11 +119,11 @@ shadowJar {
     // Minimiser le JAR (enlever les classes non utilisées)
     minimize()
 
-    // ← NOUVEAU : Relocate bStats pour éviter les conflits avec d'autres plugins
+    // Relocate bStats pour éviter les conflits avec d'autres plugins sur le serveur
     relocate 'org.bstats', 'org.gh0st.loupgarou.bstats'
 
-    // Relocate des autres dépendances si nécessaire
-    // relocate 'com.google.gson', 'org.gh0st.loupgarou.libs.gson'
+    // Relocate d'autres dépendances si vous les incluez et qu'elles pourraient poser problème
+    relocate 'com.google.gson', 'org.gh0st.loupgarou.libs.gson'
 }
 
 // Tâche de nettoyage
@@ -130,8 +131,11 @@ clean {
     delete 'build'
 }
 
-// Tâche personnalisée pour afficher les informations de build
-task buildInfo {
+// --- Tâche personnalisée pour afficher les informations de build ---
+tasks.register('buildInfo') {
+    group = 'build'
+    description = 'Affiche les informations importantes du plugin après le build.'
+
     doLast {
         println ''
         println '╔════════════════════════════════════════╗'
@@ -141,17 +145,21 @@ task buildInfo {
         println "  Version:     ${project.version}"
         println "  Description: ${project.description}"
         println "  Gradle:      ${gradle.gradleVersion}"
-        println '  📊 bStats:   Activé (3.0.2)'  // ← NOUVEAU
+        println '  📊 bStats:   Activé (3.0.2)'
         println '═══════════════════════════════════════════'
         println ''
     }
 }
 
-// Exécuter buildInfo avant chaque build
-build.dependsOn buildInfo
+// --- Dépendances des Tâches ---
 
-// ← NOUVEAU : Utiliser shadowJar par défaut
-build.dependsOn shadowJar
+// Assurer que buildInfo s'exécute après shadowJar pour afficher les infos à la fin
+tasks.shadowJar.finalizedBy(tasks.buildInfo)
+
+// Dépendance par défaut du build pour générer le Shadow JAR
+tasks.build {
+    dependsOn(tasks.shadowJar)
+}
 
 // Configuration des tests (si vous en avez)
 test {
@@ -164,17 +172,26 @@ test {
 }
 
 // Tâche pour copier le JAR dans un dossier de serveur de test (optionnel)
-task copyToServer(type: Copy, dependsOn: shadowJar) {  // ← MODIFIÉ : utilise shadowJar au lieu de jar
-    from shadowJar.archiveFile  // ← MODIFIÉ
-    into file('../test-server/plugins/') // Ajustez le chemin selon votre configuration
+tasks.register('copyToServer', Copy) {
+    group = 'build'
+    description = 'Copie le Shadow JAR dans le dossier plugins/ du serveur de test.'
+
+    dependsOn(tasks.shadowJar)
+    from tasks.shadowJar.archiveFile
+    into file('../test-server/plugins/')
 
     doLast {
         println "✅ Plugin copié vers le serveur de test !"
     }
 }
 
-// Messages de build
-gradle.buildFinished {
+// Messages de build (Cette logique est souvent déplacée vers buildInfo, mais on la garde ici)
+gradle.buildFinished { result ->
+    if (result.failure != null) {
+        // En cas d'échec, le message final de votre log est affiché par Gradle lui-même.
+        return
+    }
+
     println ''
     println '╔════════════════════════════════════════╗'
     println '║        Build terminé avec succès !     ║'
@@ -184,7 +201,7 @@ gradle.buildFinished {
     println '     1. Copiez le JAR dans plugins/'
     println '     2. Redémarrez le serveur'
     println '     3. Utilisez /lg aide'
-    println '  📊 bStats: Statistiques activées'  // ← NOUVEAU
+    println '  📊 bStats: Statistiques activées'
     println '═══════════════════════════════════════════'
     println ''
 }
