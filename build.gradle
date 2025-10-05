@@ -1,11 +1,6 @@
-// ================================
-// FICHIER: build.gradle
-// Configuration Gradle pour le plugin Loup-Garou
-// ================================
-
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1' // Pour créer un fat JAR si nécessaire
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'fr.loupgarou'
@@ -43,6 +38,12 @@ repositories {
         name = 'sk89q-repo'
         url = 'https://maven.enginehub.org/repo/'
     }
+
+    // ← NOUVEAU : Repository bStats
+    maven {
+        name = 'CodeMC'
+        url = 'https://repo.codemc.org/repository/maven-public/'
+    }
 }
 
 dependencies {
@@ -54,6 +55,9 @@ dependencies {
 
     // Gson pour parser le JSON (inclus dans le JAR car nécessaire)
     implementation 'com.google.code.gson:gson:2.10.1'
+
+    // ← NOUVEAU : bStats (sera inclus dans le JAR via shadowJar)
+    implementation 'org.bstats:bstats-bukkit:3.0.2'
 
     // Alternative Spigot API (décommenter si vous n'utilisez pas Paper)
     // compileOnly 'org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT'
@@ -105,7 +109,7 @@ jar {
     }
 }
 
-// Configuration du Shadow JAR (si vous avez des dépendances à inclure)
+// ← MODIFIÉ : Configuration du Shadow JAR avec bStats
 shadowJar {
     archiveBaseName = 'LoupGarou'
     archiveVersion = project.version
@@ -114,8 +118,11 @@ shadowJar {
     // Minimiser le JAR (enlever les classes non utilisées)
     minimize()
 
-    // Relocate des dépendances pour éviter les conflits
-    // relocate 'com.example', 'fr.loupgarou.libs.example'
+    // ← NOUVEAU : Relocate bStats pour éviter les conflits avec d'autres plugins
+    relocate 'org.bstats', 'org.gh0st.loupgarou.bstats'
+
+    // Relocate des autres dépendances si nécessaire
+    // relocate 'com.google.gson', 'org.gh0st.loupgarou.libs.gson'
 }
 
 // Tâche de nettoyage
@@ -134,6 +141,7 @@ task buildInfo {
         println "  Version:     ${project.version}"
         println "  Description: ${project.description}"
         println "  Gradle:      ${gradle.gradleVersion}"
+        println '  📊 bStats:   Activé (3.0.2)'  // ← NOUVEAU
         println '═══════════════════════════════════════════'
         println ''
     }
@@ -141,6 +149,9 @@ task buildInfo {
 
 // Exécuter buildInfo avant chaque build
 build.dependsOn buildInfo
+
+// ← NOUVEAU : Utiliser shadowJar par défaut
+build.dependsOn shadowJar
 
 // Configuration des tests (si vous en avez)
 test {
@@ -153,8 +164,8 @@ test {
 }
 
 // Tâche pour copier le JAR dans un dossier de serveur de test (optionnel)
-task copyToServer(type: Copy, dependsOn: jar) {
-    from jar.archiveFile
+task copyToServer(type: Copy, dependsOn: shadowJar) {  // ← MODIFIÉ : utilise shadowJar au lieu de jar
+    from shadowJar.archiveFile  // ← MODIFIÉ
     into file('../test-server/plugins/') // Ajustez le chemin selon votre configuration
 
     doLast {
@@ -173,6 +184,7 @@ gradle.buildFinished {
     println '     1. Copiez le JAR dans plugins/'
     println '     2. Redémarrez le serveur'
     println '     3. Utilisez /lg aide'
+    println '  📊 bStats: Statistiques activées'  // ← NOUVEAU
     println '═══════════════════════════════════════════'
     println ''
 }

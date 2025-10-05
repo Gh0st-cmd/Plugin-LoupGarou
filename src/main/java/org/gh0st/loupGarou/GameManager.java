@@ -22,6 +22,7 @@ public class GameManager {
     private UUID protectedPlayer;
     private UUID witchHealTarget;
     private UUID witchPoisonTarget;
+    private long gameStartTime = 0; // ← AJOUT pour bStats
 
     public GameManager(LoupGarouPlugin plugin) {
         this.plugin = plugin;
@@ -86,6 +87,7 @@ public class GameManager {
         }
 
         currentState = GameState.STARTING;
+        gameStartTime = System.currentTimeMillis(); // ← AJOUT pour bStats
 
         // Reset des données
         resetGameData();
@@ -140,6 +142,11 @@ public class GameManager {
             Player player = playerList.get(currentIndex++);
             players.put(player.getUniqueId(), PlayerRole.WEREWOLF);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.WEREWOLF);
+
+            // ← AJOUT pour bStats
+            if (plugin.getBStatsManager() != null) {
+                plugin.getBStatsManager().recordRoleUsage(PlayerRole.WEREWOLF);
+            }
         }
 
         // Attribution des rôles spéciaux selon le nombre de joueurs
@@ -147,18 +154,33 @@ public class GameManager {
             Player player = playerList.get(currentIndex++);
             players.put(player.getUniqueId(), PlayerRole.SEER);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.SEER);
+
+            // ← AJOUT pour bStats
+            if (plugin.getBStatsManager() != null) {
+                plugin.getBStatsManager().recordRoleUsage(PlayerRole.SEER);
+            }
         }
 
         if (playerCount >= plugin.getConfigManager().getGuardMinPlayers() && currentIndex < playerList.size()) {
             Player player = playerList.get(currentIndex++);
             players.put(player.getUniqueId(), PlayerRole.GUARD);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.GUARD);
+
+            // ← AJOUT pour bStats
+            if (plugin.getBStatsManager() != null) {
+                plugin.getBStatsManager().recordRoleUsage(PlayerRole.GUARD);
+            }
         }
 
         if (playerCount >= plugin.getConfigManager().getWitchMinPlayers() && currentIndex < playerList.size()) {
             Player player = playerList.get(currentIndex++);
             players.put(player.getUniqueId(), PlayerRole.WITCH);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.WITCH);
+
+            // ← AJOUT pour bStats
+            if (plugin.getBStatsManager() != null) {
+                plugin.getBStatsManager().recordRoleUsage(PlayerRole.WITCH);
+            }
         }
 
         // Le reste devient villageois
@@ -166,6 +188,11 @@ public class GameManager {
             Player player = playerList.get(currentIndex++);
             players.put(player.getUniqueId(), PlayerRole.VILLAGER);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.VILLAGER);
+
+            // ← AJOUT pour bStats
+            if (plugin.getBStatsManager() != null) {
+                plugin.getBStatsManager().recordRoleUsage(PlayerRole.VILLAGER);
+            }
         }
     }
 
@@ -532,6 +559,16 @@ public class GameManager {
 
         if (gameTask != null) {
             gameTask.cancel();
+        }
+
+        // ← AJOUT pour bStats : Enregistrer les statistiques de la partie
+        long gameDuration = (System.currentTimeMillis() - gameStartTime) / 1000; // en secondes
+        int playerCount = players.size();
+
+        if (plugin.getBStatsManager() != null) {
+            plugin.getBStatsManager().recordGame(playerCount, gameDuration, winningTeam);
+            plugin.getLogger().info("📊 Partie enregistrée dans bStats : " +
+                    playerCount + " joueurs, " + (gameDuration / 60) + " minutes, gagnant: " + winningTeam);
         }
 
         // Annonce de fin

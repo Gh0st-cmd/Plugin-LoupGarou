@@ -12,7 +12,8 @@ public class LoupGarouPlugin extends JavaPlugin {
     private ScoreboardManager scoreboardManager;
     private StatsManager statsManager;
     private WorldGuardIntegration worldGuardIntegration;
-    private UpdateChecker updateChecker;  // ← AJOUT DE CETTE LIGNE
+    private UpdateChecker updateChecker;
+    private BStatsManager bStatsManager;  // ← AJOUT
     private BukkitTask scoreboardUpdateTask;
 
     @Override
@@ -109,11 +110,19 @@ public class LoupGarouPlugin extends JavaPlugin {
         // Vérification des mises à jour
         try {
             this.updateChecker = new UpdateChecker(this);
-            //updateChecker.checkForUpdates();
             updateChecker.startPeriodicCheck();
             getLogger().info("✅ UpdateChecker initialisé");
         } catch (Exception e) {
             getLogger().warning("⚠️ Erreur lors de l'initialisation de l'UpdateChecker : " + e.getMessage());
+        }
+
+        // ← NOUVEAU : Initialisation de bStats
+        try {
+            this.bStatsManager = new BStatsManager(this);
+            bStatsManager.initialize();
+            getLogger().info("✅ BStatsManager initialisé");
+        } catch (Exception e) {
+            getLogger().warning("⚠️ Erreur lors de l'initialisation de bStats : " + e.getMessage());
         }
 
         // Messages de fin de chargement
@@ -159,6 +168,12 @@ public class LoupGarouPlugin extends JavaPlugin {
 
             // Informer les joueurs
             Bukkit.broadcastMessage("§c⚠️ Le serveur redémarre, la partie est interrompue !");
+        }
+
+        // ← NOUVEAU : Afficher les stats bStats avant l'arrêt
+        if (bStatsManager != null && bStatsManager.isEnabled()) {
+            getLogger().info("📊 Statistiques bStats de cette session :");
+            bStatsManager.printSessionStats();
         }
 
         // Arrêter la tâche de mise à jour du scoreboard
@@ -276,6 +291,7 @@ public class LoupGarouPlugin extends JavaPlugin {
         getLogger().info("StatsManager: " + (statsManager != null ? "✅" : "❌"));
         getLogger().info("WorldGuardIntegration: " + (worldGuardIntegration != null ? "✅" : "❌"));
         getLogger().info("UpdateChecker: " + (updateChecker != null ? "✅" : "❌"));
+        getLogger().info("BStatsManager: " + (bStatsManager != null ? "✅" : "❌"));
         getLogger().info("Scoreboard Update Task: " + (scoreboardUpdateTask != null && !scoreboardUpdateTask.isCancelled() ? "✅" : "❌"));
 
         if (gameManager != null) {
@@ -318,8 +334,13 @@ public class LoupGarouPlugin extends JavaPlugin {
         return worldGuardIntegration;
     }
 
-    public UpdateChecker getUpdateChecker() {  // ← AJOUT DE CETTE MÉTHODE
+    public UpdateChecker getUpdateChecker() {
         return updateChecker;
+    }
+
+    // ← NOUVEAU : Getter pour BStatsManager
+    public BStatsManager getBStatsManager() {
+        return bStatsManager;
     }
 
     /**

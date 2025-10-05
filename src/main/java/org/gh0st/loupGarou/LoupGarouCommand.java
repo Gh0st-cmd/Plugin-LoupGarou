@@ -19,6 +19,10 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length > 0 && plugin.getBStatsManager() != null) {
+            plugin.getBStatsManager().recordCommandUsage(args[0].toLowerCase());
+        }
+
         if (args.length == 0) {
             showHelp(sender);
             return true;
@@ -51,6 +55,10 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
             case "update":
             case "version":
                 return handleUpdate(sender);
+
+            // ← AJOUTER CE CAS
+            case "bstats":
+                return handleBStats(sender);
 
             case "kill":
             case "tuer":
@@ -270,6 +278,51 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
                 }
             }, 40L); // Attendre 2 secondes
         });
+
+        return true;
+    }
+
+    private boolean handleBStats(CommandSender sender) {
+        if (!sender.hasPermission("loupgarou.admin")) {
+            sender.sendMessage(Messages.NO_PERMISSION);
+            return true;
+        }
+
+        BStatsManager bStats = plugin.getBStatsManager();
+
+        if (bStats == null || !bStats.isEnabled()) {
+            sender.sendMessage("§c❌ bStats n'est pas activé ou disponible.");
+            sender.sendMessage("§e💡 Vérifiez que le plugin a été compilé avec bStats.");
+            return true;
+        }
+
+        sender.sendMessage("§6" + "=".repeat(50));
+        sender.sendMessage(Utils.centerText("§6§l📊 STATISTIQUES BSTATS 📊", 50));
+        sender.sendMessage("§6" + "=".repeat(50));
+        sender.sendMessage("");
+        sender.sendMessage("§a✅ bStats est actif et fonctionnel !");
+        sender.sendMessage("");
+        sender.sendMessage("§e📊 Consultez les statistiques complètes sur :");
+        sender.sendMessage("§b   https://bstats.org/plugin/bukkit/loup-garou");
+        sender.sendMessage("");
+        sender.sendMessage("§7📈 Les statistiques incluent :");
+        sender.sendMessage("§7  • Nombre de serveurs utilisant le plugin");
+        sender.sendMessage("§7  • Nombre de parties jouées");
+        sender.sendMessage("§7  • Rôles les plus populaires");
+        sender.sendMessage("§7  • Taux de victoire Village vs Loups");
+        sender.sendMessage("§7  • Durée moyenne des parties");
+        sender.sendMessage("§7  • Commandes les plus utilisées");
+        sender.sendMessage("§7  • Et bien plus...");
+        sender.sendMessage("");
+        sender.sendMessage("§e💡 Les données sont anonymes et conformes au RGPD");
+        sender.sendMessage("§7   Les joueurs peuvent désactiver bStats dans");
+        sender.sendMessage("§7   plugins/bStats/config.yml");
+        sender.sendMessage("§6" + "=".repeat(50));
+
+        // Afficher les stats de session actuelle en console
+        sender.sendMessage("");
+        sender.sendMessage("§e📊 Statistiques de cette session :");
+        bStats.printSessionStats();
 
         return true;
     }
@@ -595,6 +648,7 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("§f/lg reload §7- Recharger la configuration");
             sender.sendMessage("§f/lg setspawn §7- Définir le spawn de jeu");
             sender.sendMessage("§f/lg update §7- Vérifier les mises à jour");
+            sender.sendMessage("§f/lg bstats §7- Voir les statistiques du plugin");
             sender.sendMessage("§f/lg statut §7- Voir le statut de la partie");
             sender.sendMessage("§f/lg liste §7- Voir tous les joueurs et leurs rôles");
             sender.sendMessage("");
@@ -626,7 +680,8 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
                     "start", "stop", "statut", "stats", "reload", "setspawn",
                     "kill", "tuer", "voir", "see", "proteger", "guard",
                     "soigner", "heal", "empoisonner", "poison",
-                    "liste", "list", "aide", "help"
+                    "liste", "list", "aide", "help", "update",
+                    "bstats"
             );
 
             String prefix = args[0].toLowerCase();
