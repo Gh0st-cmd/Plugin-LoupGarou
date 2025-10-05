@@ -30,14 +30,6 @@ jobs:
       - name: 🔧 Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: ☕ Ensure Java 21 for Shadow
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-          cache: gradle
-
-
       # 4. Build avec Gradle
       - name: 🏗️ Build with Gradle (Java 21)
         run: |
