@@ -14,11 +14,9 @@ jobs:
       packages: write
 
     steps:
-      # 1. Checkout du code
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Configuration de Java 21
       - name: ☕ Setup Java 21
         uses: actions/setup-java@v4
         with:
@@ -26,19 +24,15 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # 3. Donner les permissions d'exécution à gradlew
       - name: 🔧 Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # 4. Build avec Gradle
       - name: 🏗️ Build with Gradle
         run: ./gradlew build --no-daemon
 
-      # 5. Lister les fichiers générés
       - name: 📋 List build artifacts
         run: ls -la build/libs/
 
-      # 6. Upload du fichier JAR comme artifact
       - name: 📤 Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:
@@ -46,12 +40,10 @@ jobs:
           path: build/libs/*.jar
           retention-days: 30
 
-      # 7. Tests
       - name: 🧪 Run tests
         run: ./gradlew test --no-daemon
         continue-on-error: true
 
-      # 8. Upload des résultats de tests
       - name: 📊 Upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -68,20 +60,17 @@ jobs:
       contents: write
 
     steps:
-      # 1. Checkout du code
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # nécessaire pour récupérer tous les tags
 
-      # 2. Configuration de Java 21
       - name: ☕ Setup Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      # 3. Récupérer le dernier tag
       - name: 🧮 Get latest tag
         id: get_tag
         run: |
@@ -89,7 +78,6 @@ jobs:
           echo "Latest tag: $latest_tag"
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
 
-      # 4. Incrémenter le patch (1.0.0 -> 1.0.1)
       - name: 🔢 Bump patch version
         id: bump
         run: |
@@ -113,6 +101,11 @@ jobs:
           git push origin $NEXT_TAG
           echo "GITHUB_TAG=$NEXT_TAG" >> $GITHUB_ENV
 
+      - name: 🧩 Configure Git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: 📝 Generate Changelog
         run: |
           git config user.name "github-actions[bot]"
@@ -122,7 +115,6 @@ jobs:
           git commit -m "Update CHANGELOG for release ${{ env.new_tag }}" || echo "No changes to commit"
           git push origin main
 
-      # 6. Build Gradle (rebuild pour release)
       - name: 🏗️ Build with Gradle
         run: |
           chmod +x gradlew
@@ -130,13 +122,11 @@ jobs:
         env:
           GITHUB_TAG: ${{ env.GITHUB_TAG }}
 
-      # 7. Télécharger l'artifact du job build
       - name: 📥 Download artifact
         uses: actions/download-artifact@v4
         with:
           name: LoupGarou-Plugin
 
-      # 8. Créer la Release GitHub
       - name: 🚀 Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
