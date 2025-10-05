@@ -10,6 +10,11 @@ plugins {
 group = 'fr.loupgarou'
 description = 'Plugin Loup-Garou pour Minecraft'
 
+// --- Global Java Compatibility Settings ---
+// Définition de la version de compilation et d'exécution du code à un niveau global
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
+
 // --- Gestion de la Version par Tag GitHub ---
 def gitTag = System.getenv("GITHUB_TAG")
 
@@ -30,12 +35,10 @@ java {
     }
 }
 
-// Définition de la version de compilation et d'exécution du code
+// Configuration de la compilation
 tasks.withType(JavaCompile) {
-    sourceCompatibility = JavaVersion.VERSION_21.toString()
-    targetCompatibility = JavaVersion.VERSION_21.toString()
     options.encoding = 'UTF-8'
-    // Activation des warnings de dépréciation
+    // Activation des warnings de dépréciation et d'unchecked
     options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
 }
 
