@@ -3,7 +3,7 @@ name: Build & Release Plugin Loup-Garou
 on:
   push:
     branches: [ "main", "master", "develop" ]
-  workflow_dispatch:  # permet de lancer manuellement
+  workflow_dispatch:
 
 jobs:
   build:
@@ -70,6 +70,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: gradle
 
       - name: 🧮 Get latest tag
         id: get_tag
@@ -118,7 +119,7 @@ jobs:
       - name: 🏗️ Build with Gradle
         run: |
           chmod +x gradlew
-          ./gradlew build --no-daemon
+          ./gradlew build shadowJar --no-daemon
         env:
           GITHUB_TAG: ${{ env.GITHUB_TAG }}
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}

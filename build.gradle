@@ -3,6 +3,14 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
+tasks.withType(JavaCompile).configureEach {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+tasks.withType(org.gradle.jvm.tasks.Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 group = 'fr.loupgarou'
 // Récupérer le tag GitHub si défini
 def gitTag = System.getenv("GITHUB_TAG")
