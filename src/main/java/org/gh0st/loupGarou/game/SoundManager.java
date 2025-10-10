@@ -1,8 +1,9 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.game;
 
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
+import org.gh0st.loupGarou.role.PlayerRole;
 
 public class SoundManager {
 

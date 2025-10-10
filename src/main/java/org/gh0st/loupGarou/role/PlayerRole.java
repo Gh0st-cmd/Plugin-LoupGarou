@@ -1,4 +1,4 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.role;
 
 /**
  * Énumération définissant tous les rôles disponibles dans le jeu Loup-Garou

@@ -1,4 +1,4 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.commands;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -7,6 +7,14 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.gh0st.loupGarou.*;
+import org.gh0st.loupGarou.config.Messages;
+import org.gh0st.loupGarou.game.GameManager;
+import org.gh0st.loupGarou.role.PlayerRole;
+import org.gh0st.loupGarou.utils.UpdateChecker;
+import org.gh0st.loupGarou.utils.Utils;
+import org.gh0st.loupGarou.utils.extern.BStatsManager;
+
 import java.util.*;
 
 public class LoupGarouCommand implements CommandExecutor, TabCompleter {

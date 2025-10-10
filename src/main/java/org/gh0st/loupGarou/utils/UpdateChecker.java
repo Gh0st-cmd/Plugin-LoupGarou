@@ -1,10 +1,10 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.utils;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.gh0st.loupGarou.LoupGarouPlugin;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

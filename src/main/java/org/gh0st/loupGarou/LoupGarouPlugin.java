@@ -4,6 +4,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.scheduler.BukkitTask;
+import org.gh0st.loupGarou.commands.LoupGarouCommand;
+import org.gh0st.loupGarou.commands.VoteCommand;
+import org.gh0st.loupGarou.config.ConfigManager;
+import org.gh0st.loupGarou.game.GameListener;
+import org.gh0st.loupGarou.game.GameManager;
+import org.gh0st.loupGarou.game.StatsManager;
+import org.gh0st.loupGarou.scoreboard.ScoreboardManager;
+import org.gh0st.loupGarou.utils.UpdateChecker;
+import org.gh0st.loupGarou.utils.extern.BStatsManager;
+import org.gh0st.loupGarou.utils.extern.WorldGuardIntegration;
 
 public class LoupGarouPlugin extends JavaPlugin {
 
