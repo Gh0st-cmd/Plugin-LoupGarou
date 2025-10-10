@@ -1,8 +1,11 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.utils.extern;
 
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.*;
 import org.bukkit.Bukkit;
+import org.gh0st.loupGarou.LoupGarouPlugin;
+import org.gh0st.loupGarou.role.PlayerRole;
+import org.gh0st.loupGarou.game.GameManager;
 
 import java.util.HashMap;
 import java.util.Map;

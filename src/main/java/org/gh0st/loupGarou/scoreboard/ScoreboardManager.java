@@ -1,9 +1,13 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.scoreboard;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 import org.bukkit.ChatColor;
+import org.gh0st.loupGarou.LoupGarouPlugin;
+import org.gh0st.loupGarou.role.PlayerRole;
+import org.gh0st.loupGarou.utils.extern.WorldGuardIntegration;
+import org.gh0st.loupGarou.game.GameManager;
 
 public class ScoreboardManager {
 

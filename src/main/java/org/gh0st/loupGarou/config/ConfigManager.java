@@ -1,10 +1,12 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.config;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Location;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.gh0st.loupGarou.LoupGarouPlugin;
+
 import java.io.File;
 import java.io.IOException;
 

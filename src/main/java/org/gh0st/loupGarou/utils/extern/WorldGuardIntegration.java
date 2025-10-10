@@ -1,4 +1,4 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.utils.extern;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -9,6 +9,7 @@ import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
+import org.gh0st.loupGarou.LoupGarouPlugin;
 
 /**
  * Classe de gestion de l'intégration avec WorldGuard

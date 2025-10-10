@@ -1,9 +1,15 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.game;
 
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.gh0st.loupGarou.*;
+import org.gh0st.loupGarou.config.Messages;
+import org.gh0st.loupGarou.role.PlayerRole;
+import org.gh0st.loupGarou.utils.Utils;
+import org.gh0st.loupGarou.utils.extern.WorldGuardIntegration;
+
 import java.util.*;
 
 public class GameManager {

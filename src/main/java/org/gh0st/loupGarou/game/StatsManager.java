@@ -1,11 +1,14 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.game;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.gh0st.loupGarou.LoupGarouPlugin;
+import org.gh0st.loupGarou.role.PlayerRole;
+import org.gh0st.loupGarou.utils.Utils;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 
 public class StatsManager {
 

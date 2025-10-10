@@ -1,4 +1,4 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.commands;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -6,6 +6,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
+import org.gh0st.loupGarou.LoupGarouPlugin;
+import org.gh0st.loupGarou.config.Messages;
+import org.gh0st.loupGarou.game.GameManager;
+
 import java.util.*;
 
 public class VoteCommand implements CommandExecutor, TabCompleter {

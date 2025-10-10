@@ -1,4 +1,4 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.game;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,7 +12,11 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
+import org.gh0st.loupGarou.*;
+import org.gh0st.loupGarou.role.PlayerRole;
+import org.gh0st.loupGarou.utils.UpdateChecker;
+import org.gh0st.loupGarou.utils.Utils;
+import org.gh0st.loupGarou.utils.extern.WorldGuardIntegration;
 
 public class GameListener implements Listener {
 

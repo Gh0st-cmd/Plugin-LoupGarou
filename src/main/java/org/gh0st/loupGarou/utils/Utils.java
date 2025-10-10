@@ -1,4 +1,4 @@
-package org.gh0st.loupGarou;
+package org.gh0st.loupGarou.utils;
 
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
