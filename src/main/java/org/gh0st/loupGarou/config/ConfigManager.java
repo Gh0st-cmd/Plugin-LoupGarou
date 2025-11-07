@@ -10,17 +10,33 @@ import org.gh0st.loupGarou.LoupGarouPlugin;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Gestionnaire de configuration pour le plugin Loup-Garou.
+ *
+ * <p>
+ * Cette classe est responsable de la création de la configuration par défaut,
+ * de la sauvegarde et du rechargement du fichier config.yml et de
+ * l'ajout automatique des nouvelles options manquantes lorsqu'une ancienne
+ * configuration est détectée. Elle expose également des accesseurs
+ * pratiques pour récupérer les valeurs configurées dans d'autres
+ * composants du plugin.
+ * </p>
+ */
 public class ConfigManager {
 
     private final LoupGarouPlugin plugin;
     private FileConfiguration config;
-    private File configFile;
+    private final File configFile;
 
     public ConfigManager(LoupGarouPlugin plugin) {
         this.plugin = plugin;
         this.configFile = new File(plugin.getDataFolder(), "config.yml");
     }
 
+    /**
+     * Crée la configuration par défaut si elle n'existe pas encore,
+     * ou charge et met à jour celle existante en ajoutant les options manquantes.
+     */
     public void createDefaultConfig() {
         // Créer le dossier si nécessaire
         if (!plugin.getDataFolder().exists()) {
@@ -46,6 +62,10 @@ public class ConfigManager {
         loadConfig();
     }
 
+    /**
+     * Initialise toutes les options de configuration avec leurs valeurs par défaut.
+     * Cette méthode est appelée lors de la première création du fichier config.yml.
+     */
     private void setDefaultValues() {
         // Configuration du jeu
         config.set("game.min-players", 4);
@@ -112,10 +132,16 @@ public class ConfigManager {
         config.set("update-checker.notify-admins", true); // Notifier les admins à la connexion
     }
 
+    /**
+     * Ajoute les options manquantes dans une configuration existante afin
+     * de maintenir la compatibilité avec les versions ultérieures du plugin.
+     *
+     * @return true si des options ont été ajoutées, false sinon
+     */
     private boolean addMissingValues() {
         boolean modified = false;
 
-        // Vérifier et ajouter les valeurs manquantes
+        // Vérifier et ajouter les valeurs manquantes du spawn
         if (!config.contains("spawn.world")) {
             config.set("spawn.world", "minijeux");
             modified = true;
@@ -140,6 +166,7 @@ public class ConfigManager {
             config.set("spawn.pitch", 0.0f);
             modified = true;
         }
+        // Vérifier et ajouter les valeurs manquantes de WorldGuard
         if (!config.contains("worldguard.enabled")) {
             config.set("worldguard.enabled", true);
             modified = true;
@@ -156,10 +183,12 @@ public class ConfigManager {
             config.set("worldguard.world-name", "minijeux");
             modified = true;
         }
+        // Vérifier et ajouter les valeurs manquantes du scoreboard
         if (!config.contains("scoreboard.only-in-region")) {
             config.set("scoreboard.only-in-region", true);
             modified = true;
         }
+        // Vérifier et ajouter les messages manquants
         if (!config.contains("messages.not-in-region")) {
             config.set("messages.not-in-region", "§c❌ Vous devez être dans la zone 'loupgarou' pour jouer !");
             modified = true;
@@ -168,6 +197,7 @@ public class ConfigManager {
             config.set("messages.wrong-world", "§c❌ Le jeu Loup-Garou n'est disponible que dans le monde '{world}' !");
             modified = true;
         }
+        // Vérifier et ajouter le vérificateur de mises à jour manquant
         if (!config.contains("update-checker.enabled")) {
             config.set("update-checker.enabled", true);
             modified = true;
@@ -181,9 +211,31 @@ public class ConfigManager {
             modified = true;
         }
 
+        // Nouvelles options de jeu ajoutées dans les versions récentes
+        // Ajout du système de maire par défaut
+        if (!config.contains("game.enable-mayor")) {
+            config.set("game.enable-mayor", true);
+            modified = true;
+        }
+        // Ajout de l'effet de cécité la nuit
+        if (!config.contains("game.blindness-at-night")) {
+            config.set("game.blindness-at-night", true);
+            modified = true;
+        }
+        // Ajout de l'immobilisation des joueurs la nuit
+        if (!config.contains("game.freeze-players-at-night")) {
+            config.set("game.freeze-players-at-night", false);
+            modified = true;
+        }
+
         return modified;
     }
 
+    /**
+     * Charge la configuration en mémoire depuis le fichier config.yml
+     * si celui-ci existe. Si le fichier est manquant, il sera recréé
+     * automatiquement en utilisant la configuration par défaut.
+     */
     public void loadConfig() {
         if (configFile.exists()) {
             config = YamlConfiguration.loadConfiguration(configFile);
@@ -194,6 +246,10 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Sauvegarde la configuration en mémoire vers le fichier config.yml
+     * et ajoute un en-tête explicatif pour aider les administrateurs.
+     */
     public void saveConfig() {
         try {
             if (config != null && configFile != null) {
@@ -204,7 +260,7 @@ public class ConfigManager {
                         "# \n" +
                         "# spawn: Configuration du point de spawn du jeu\n" +
                         "# worldguard: Intégration avec WorldGuard (nécessite le plugin WorldGuard)\n" +
-                        "# game: Paramètres de durée et nombre de joueurs\n" +
+                        "# game: Paramètres de durée, nombre de joueurs et options de jeu\n" +
                         "# roles: Configuration des rôles spéciaux\n" +
                         "# \n" +
                         "# ⚠️ Redémarrez le serveur ou utilisez /lg reload après modification\n" +
@@ -220,6 +276,9 @@ public class ConfigManager {
         }
     }
 
+    /**
+     * Recharge la configuration depuis le fichier config.yml.
+     */
     public void reloadConfig() {
         loadConfig();
         plugin.getLogger().info("Configuration rechargée !");
@@ -283,7 +342,7 @@ public class ConfigManager {
         return config.getString("worldguard.world-name", "minijeux");
     }
 
-    // Getters existants
+    // Getters existants pour les paramètres du jeu
     public int getMinPlayers() {
         return config.getInt("game.min-players", 4);
     }
@@ -385,6 +444,7 @@ public class ConfigManager {
         return config.getBoolean("debug.verbose", false);
     }
 
+    // Getters pour les nouvelles options de jeu
     public boolean isMayorEnabled() {
         return config.getBoolean("game.enable-mayor", true);
     }
