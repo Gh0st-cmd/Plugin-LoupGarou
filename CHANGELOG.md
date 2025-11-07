@@ -1,6 +1,6 @@
 # Changelog Loup-Garou
 
-## [1.0.3] - 2025-01-09
+## [1.0.3] - 08/11/2025
 
 Cette mise à jour majeure introduit le **système du Maire** et corrige plusieurs bugs critiques pour améliorer l'expérience de jeu !
 
