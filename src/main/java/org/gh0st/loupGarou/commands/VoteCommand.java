@@ -12,6 +12,12 @@ import org.gh0st.loupGarou.game.GameManager;
 
 import java.util.*;
 
+/**
+ * Commande de vote /vote. Permet de voter pour éliminer un joueur pendant
+ * la phase de vote standard ou de décision du maire. Durant la phase du
+ * maire, seul le maire peut voter et les candidats sont limités aux
+ * joueurs en égalité. Le GameManager gère les validations supplémentaires.
+ */
 public class VoteCommand implements CommandExecutor, TabCompleter {
 
     private final LoupGarouPlugin plugin;
@@ -30,14 +36,16 @@ public class VoteCommand implements CommandExecutor, TabCompleter {
         Player player = (Player) sender;
         GameManager gm = plugin.getGameManager();
 
-        // Vérifier que c'est la phase de vote
-        if (gm.getCurrentState() != GameManager.GameState.VOTE) {
+        // Vérifier que c'est la phase de vote ou de décision du maire
+        GameManager.GameState state = gm.getCurrentState();
+        if (state != GameManager.GameState.VOTE && state != GameManager.GameState.MAYOR_VOTE) {
             player.sendMessage("§c❌ Vous ne pouvez voter que pendant la phase de vote !");
             return true;
         }
 
-        // Vérifier que le joueur est vivant
-        if (!gm.isPlayerAlive(player)) {
+        // Si nous sommes dans la phase normale de vote, uniquement les joueurs vivants peuvent voter.
+        // Dans la phase de décision du maire, le vote est réservé au maire (addVote gère cette vérification).
+        if (state == GameManager.GameState.VOTE && !gm.isPlayerAlive(player)) {
             player.sendMessage("§c❌ Les joueurs morts ne peuvent pas voter !");
             return true;
         }
@@ -54,30 +62,41 @@ public class VoteCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!gm.isPlayerAlive(target)) {
-            player.sendMessage("§c❌ Vous ne pouvez pas voter pour un joueur mort !");
-            return true;
+        // Pour la phase normale de vote, empêcher de voter pour un mort ou soi-même
+        if (state == GameManager.GameState.VOTE) {
+            if (!gm.isPlayerAlive(target)) {
+                player.sendMessage("§c❌ Vous ne pouvez pas voter pour un joueur mort !");
+                return true;
+            }
+            if (target.equals(player)) {
+                player.sendMessage("§c❌ Vous ne pouvez pas voter pour vous-même !");
+                return true;
+            }
         }
 
-        if (target.equals(player)) {
-            player.sendMessage("§c❌ Vous ne pouvez pas voter pour vous-même !");
-            return true;
-        }
-
+        // Enregistrer le vote via le GameManager. addVote gère les validations (maire, candidats, etc.)
         if (gm.addVote(player.getUniqueId(), target.getUniqueId())) {
-            player.sendMessage("§e🗳️ Vous avez voté pour éliminer §c" + target.getName() + " §e!");
-
-            // Message public anonyme
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                if (gm.isPlayerAlive(p) && !p.equals(player)) {
-                    p.sendMessage("§7📊 Un vote a été enregistré...");
+            // Message personnalisé selon la phase
+            if (state == GameManager.GameState.MAYOR_VOTE) {
+                player.sendMessage("§6👑 Vous avez choisi d'éliminer §c" + target.getName() + " §6!");
+            } else {
+                player.sendMessage("§e🗳️ Vous avez voté pour éliminer §c" + target.getName() + " §e!");
+                // Message public anonyme pour informer les autres joueurs vivants
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (gm.isPlayerAlive(p) && !p.equals(player)) {
+                        p.sendMessage("§7📊 Un vote a été enregistré...");
+                    }
                 }
             }
-
             // Son pour confirmer le vote
             player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
         } else {
-            player.sendMessage("§c❌ Erreur lors de l'enregistrement du vote.");
+            // Si le vote n'est pas enregistré, informer le joueur
+            if (state == GameManager.GameState.MAYOR_VOTE) {
+                player.sendMessage("§c❌ Vous ne pouvez pas voter pour ce joueur. Choisissez un candidat valide.");
+            } else {
+                player.sendMessage("§c❌ Erreur lors de l'enregistrement du vote.");
+            }
         }
 
         return true;
@@ -92,13 +111,16 @@ public class VoteCommand implements CommandExecutor, TabCompleter {
         GameManager gm = plugin.getGameManager();
         List<String> completions = new ArrayList<>();
 
-        if (args.length == 1 && gm.getCurrentState() == GameManager.GameState.VOTE) {
-            String prefix = args[0].toLowerCase();
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (gm.isPlayerAlive(player) &&
-                        !player.equals(sender) &&
-                        player.getName().toLowerCase().startsWith(prefix)) {
-                    completions.add(player.getName());
+        if (args.length == 1) {
+            GameManager.GameState state = gm.getCurrentState();
+            // Pendant les phases VOTE et MAYOR_VOTE, lister les joueurs vivants
+            if (state == GameManager.GameState.VOTE || state == GameManager.GameState.MAYOR_VOTE) {
+                String prefix = args[0].toLowerCase();
+                Player senderPlayer = (Player) sender;
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (gm.isPlayerAlive(player) && !player.equals(senderPlayer) && player.getName().toLowerCase().startsWith(prefix)) {
+                        completions.add(player.getName());
+                    }
                 }
             }
         }

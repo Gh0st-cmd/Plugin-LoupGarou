@@ -55,8 +55,6 @@ public class ConfigManager {
         config.set("game.vote-duration", 60);
         config.set("game.auto-restart", true);
         config.set("game.restart-delay", 30);
-
-        // Options de gameplay
         config.set("game.enable-mayor", true); // Activer le système de maire
         config.set("game.blindness-at-night", true); // Effet de cécité la nuit
         config.set("game.freeze-players-at-night", false); // Immobiliser les joueurs la nuit

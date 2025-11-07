@@ -17,6 +17,20 @@ import org.gh0st.loupGarou.utils.extern.BStatsManager;
 
 import java.util.*;
 
+/**
+ * Commande principale du plugin Loup-Garou.
+ *
+ * <p>
+ * Cette classe gère toutes les commandes commençant par <code>/lg</code> et
+ * redirige vers les sous-commandes appropriées. Elle fournit également la
+ * complétion automatique pour les commandes du plugin.
+ *
+ * <p>
+ * Les ajouts récents incluent la gestion du transfert de rôle de maire. Lorsqu'un
+ * maire meurt, il peut désigner un successeur via <code>/lg maire &lt;joueur&gt;</code>. Cette
+ * commande est réservée au maire décédé et ne fonctionne que si le joueur
+ * concerné est toujours considéré comme le maire par le {@link GameManager}.
+ */
 public class LoupGarouCommand implements CommandExecutor, TabCompleter {
 
     private final LoupGarouPlugin plugin;
@@ -64,7 +78,6 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
             case "version":
                 return handleUpdate(sender);
 
-            // ← AJOUTER CE CAS
             case "bstats":
                 return handleBStats(sender);
 
@@ -97,12 +110,20 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
                 showHelp(sender);
                 return true;
 
+            // ← NOUVEAU : désignation du nouveau maire
+            case "maire":
+            case "mayor":
+                return handleMayor(sender, args);
+
             default:
                 sender.sendMessage("§c❌ Commande inconnue. Utilisez /lg aide pour voir les commandes.");
                 return true;
         }
     }
 
+    /**
+     * Démarre la partie si toutes les conditions sont réunies.
+     */
     private boolean handleStart(CommandSender sender) {
         if (!sender.hasPermission("loupgarou.admin")) {
             sender.sendMessage(Messages.NO_PERMISSION);
@@ -123,6 +144,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Arrête la partie en cours.
+     */
     private boolean handleStop(CommandSender sender) {
         if (!sender.hasPermission("loupgarou.admin")) {
             sender.sendMessage(Messages.NO_PERMISSION);
@@ -140,6 +164,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Affiche le statut de la partie au joueur.
+     */
     private boolean handleStatus(CommandSender sender) {
         GameManager gm = plugin.getGameManager();
         sender.sendMessage("§6📊 === STATUT DE LA PARTIE ===");
@@ -161,6 +188,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Affiche les statistiques du joueur.
+     */
     private boolean handleStats(CommandSender sender) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(Messages.PLAYER_ONLY);
@@ -172,6 +202,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Recharge la configuration du plugin.
+     */
     private boolean handleReload(CommandSender sender) {
         if (!sender.hasPermission("loupgarou.admin")) {
             sender.sendMessage(Messages.NO_PERMISSION);
@@ -211,6 +244,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Définit le point de spawn utilisé pour les parties.
+     */
     private boolean handleSetSpawn(CommandSender sender) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(Messages.PLAYER_ONLY);
@@ -248,6 +284,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Vérifie les mises à jour du plugin.
+     */
     private boolean handleUpdate(CommandSender sender) {
         if (!sender.hasPermission("loupgarou.admin")) {
             sender.sendMessage(Messages.NO_PERMISSION);
@@ -290,6 +329,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Affiche les statistiques bStats.
+     */
     private boolean handleBStats(CommandSender sender) {
         if (!sender.hasPermission("loupgarou.admin")) {
             sender.sendMessage(Messages.NO_PERMISSION);
@@ -335,6 +377,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Gère la commande du loup-garou pour tuer une cible pendant la nuit.
+     */
     private boolean handleKill(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(Messages.PLAYER_ONLY);
@@ -393,6 +438,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Gère la commande de la voyante permettant de voir le rôle d'un joueur.
+     */
     private boolean handleSee(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(Messages.PLAYER_ONLY);
@@ -450,6 +498,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Gère la commande du garde pour protéger un joueur.
+     */
     private boolean handleGuard(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(Messages.PLAYER_ONLY);
@@ -509,6 +560,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Gère la commande de la sorcière pour soigner un joueur.
+     */
     private boolean handleHeal(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(Messages.PLAYER_ONLY);
@@ -553,6 +607,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Gère la commande de la sorcière pour empoisonner un joueur.
+     */
     private boolean handlePoison(CommandSender sender, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage(Messages.PLAYER_ONLY);
@@ -607,6 +664,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Affiche la liste des joueurs (connectés ou en partie).
+     */
     private boolean handleList(CommandSender sender) {
         GameManager gm = plugin.getGameManager();
         sender.sendMessage("§6📋 === LISTE DES JOUEURS ===");
@@ -644,6 +704,61 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    /**
+     * Gère la désignation du nouveau maire par l'ancien maire décédé.
+     *
+     * @param sender l'expéditeur de la commande
+     * @param args   arguments de la commande (/lg maire <joueur>)
+     * @return toujours vrai pour indiquer que la commande a été traitée
+     */
+    private boolean handleMayor(CommandSender sender, String[] args) {
+        // Seul un joueur peut désigner un successeur
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(Messages.PLAYER_ONLY);
+            return true;
+        }
+
+        Player player = (Player) sender;
+        GameManager gm = plugin.getGameManager();
+
+        // Vérifier que ce joueur est l'actuel maire enregistré
+        if (!player.getUniqueId().equals(gm.getMayor())) {
+            sender.sendMessage("§c❌ Vous n'êtes pas le maire actuel !");
+            return true;
+        }
+
+        // Vérifier qu'il est bien mort (sinon il n'a pas à choisir de successeur)
+        if (gm.isPlayerAlive(player)) {
+            sender.sendMessage("§c❌ Vous devez être éliminé pour désigner un successeur.");
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage("§c❌ Usage : /lg maire <joueur>");
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage(Messages.PLAYER_NOT_FOUND);
+            return true;
+        }
+
+        // La cible doit être vivante pour devenir maire
+        if (!gm.isPlayerAlive(target)) {
+            sender.sendMessage("§c❌ Vous devez choisir un joueur vivant pour devenir maire.");
+            return true;
+        }
+
+        // Nommer le nouveau maire
+        gm.setNewMayor(target, false);
+        sender.sendMessage("§6👑 Vous avez désigné §e" + target.getName() + " §6comme nouveau maire.");
+        return true;
+    }
+
+    /**
+     * Affiche l'aide des commandes disponibles.
+     */
     private void showHelp(CommandSender sender) {
         sender.sendMessage("§6" + "=".repeat(50));
         sender.sendMessage(Utils.centerText("§6§l🐺 AIDE LOUP-GAROU 🐺", 50));
@@ -675,6 +790,7 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage("§b/lg proteger <joueur> §7- (Garde) Protéger un joueur");
         sender.sendMessage("§d/lg soigner <joueur> §7- (Sorcière) Ressusciter");
         sender.sendMessage("§d/lg empoisonner <joueur> §7- (Sorcière) Tuer");
+        sender.sendMessage("§6/lg maire <joueur> §7- (Maire décédé) Choisir un successeur");
 
         sender.sendMessage("§6" + "=".repeat(50));
     }
@@ -689,7 +805,9 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
                     "kill", "tuer", "voir", "see", "proteger", "guard",
                     "soigner", "heal", "empoisonner", "poison",
                     "liste", "list", "aide", "help", "update",
-                    "bstats"
+                    "bstats",
+                    // ← NOUVEAU : commandes liées au maire
+                    "maire", "mayor"
             );
 
             String prefix = args[0].toLowerCase();
@@ -702,12 +820,21 @@ public class LoupGarouCommand implements CommandExecutor, TabCompleter {
             // Complétion des noms de joueurs pour les commandes qui en ont besoin
             List<String> playerCommands = Arrays.asList(
                     "kill", "tuer", "voir", "see", "proteger", "guard",
-                    "soigner", "heal", "empoisonner", "poison"
+                    "soigner", "heal", "empoisonner", "poison",
+                    "maire", "mayor"
             );
 
             if (playerCommands.contains(args[0].toLowerCase())) {
                 String prefix = args[1].toLowerCase();
+                GameManager gm = plugin.getGameManager();
+
                 for (Player player : Bukkit.getOnlinePlayers()) {
+                    // Pour la commande du maire, seuls les joueurs vivants doivent être proposés
+                    if (args[0].equalsIgnoreCase("maire") || args[0].equalsIgnoreCase("mayor")) {
+                        if (!gm.isPlayerAlive(player)) {
+                            continue;
+                        }
+                    }
                     if (player.getName().toLowerCase().startsWith(prefix)) {
                         completions.add(player.getName());
                     }
