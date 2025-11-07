@@ -2,6 +2,8 @@ package org.gh0st.loupGarou.game;
 
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.gh0st.loupGarou.*;
@@ -22,13 +24,19 @@ public class GameManager {
     private final Map<UUID, Boolean> guardSelfProtected = new HashMap<>();
     private final Map<UUID, Boolean> seerUsedPower = new HashMap<>();
     private final Map<UUID, Boolean> guardUsedPower = new HashMap<>();
+    private final Set<UUID> deadPlayers = new HashSet<>(); // ← NOUVEAU : Suivi des morts
+    private UUID mayor = null; // ← NOUVEAU : Le maire
+    private Location circleCenter = null; // ← NOUVEAU : Centre du cercle
+    private final Map<UUID, Location> originalLocations = new HashMap<>(); // ← NOUVEAU : Positions d'origine
+
     private GameState currentState = GameState.WAITING;
     private BukkitTask gameTask;
+    private BukkitTask phaseTimerTask; // ← NOUVEAU : Pour annuler le timer
     private int dayNumber = 0;
     private UUID protectedPlayer;
     private UUID witchHealTarget;
     private UUID witchPoisonTarget;
-    private long gameStartTime = 0; // ← AJOUT pour bStats
+    private long gameStartTime = 0;
 
     public GameManager(LoupGarouPlugin plugin) {
         this.plugin = plugin;
@@ -40,6 +48,7 @@ public class GameManager {
         NIGHT("§1🌙 Nuit"),
         DAY("§e☀️ Jour"),
         VOTE("§c🗳️ Vote"),
+        MAYOR_VOTE("§6👑 Vote du Maire"),
         FINISHED("§aTerminé");
 
         private final String displayName;
@@ -93,13 +102,14 @@ public class GameManager {
         }
 
         currentState = GameState.STARTING;
-        gameStartTime = System.currentTimeMillis(); // ← AJOUT pour bStats
+        gameStartTime = System.currentTimeMillis();
 
         // Reset des données
         resetGameData();
 
         // Préparation de la partie
         assignRoles();
+        electMayor(); // ← NOUVEAU : Élection du maire
         sendRoleMessages();
         teleportPlayersToGame();
 
@@ -125,6 +135,9 @@ public class GameManager {
         guardSelfProtected.clear();
         seerUsedPower.clear();
         guardUsedPower.clear();
+        deadPlayers.clear(); // ← NOUVEAU
+        mayor = null; // ← NOUVEAU
+        originalLocations.clear(); // ← NOUVEAU
         dayNumber = 0;
         protectedPlayer = null;
         witchHealTarget = null;
@@ -132,6 +145,31 @@ public class GameManager {
 
         // Nettoyer les équipes du scoreboard
         plugin.getScoreboardManager().removeAllTeams();
+    }
+
+    // ← NOUVEAU : Élection du maire
+    private void electMayor() {
+        if (plugin.getConfigManager().getConfig().getBoolean("game.enable-mayor", true)) {
+            List<Player> playerList = new ArrayList<>(Bukkit.getOnlinePlayers());
+            if (!playerList.isEmpty()) {
+                Player mayorPlayer = playerList.get(new Random().nextInt(playerList.size()));
+                mayor = mayorPlayer.getUniqueId();
+
+                broadcastMessage("§6👑 === ÉLECTION DU MAIRE ===");
+                broadcastMessage("§e🎖️ " + mayorPlayer.getName() + " a été élu maire du village !");
+                broadcastMessage("§7💡 En cas d'égalité lors des votes, le maire départagera.");
+
+                mayorPlayer.sendMessage("§6" + "=".repeat(50));
+                mayorPlayer.sendMessage(Utils.centerText("§6§l👑 VOUS ÊTES LE MAIRE 👑", 50));
+                mayorPlayer.sendMessage("§6" + "=".repeat(50));
+                mayorPlayer.sendMessage("§e🎖️ Vous avez été élu maire du village !");
+                mayorPlayer.sendMessage("§7💡 Votre rôle : " + players.get(mayor).getDisplayName());
+                mayorPlayer.sendMessage("§7💡 En cas d'égalité, vous choisirez qui éliminer.");
+                mayorPlayer.sendMessage("§6" + "=".repeat(50));
+
+                mayorPlayer.playSound(mayorPlayer.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+            }
+        }
     }
 
     private void assignRoles() {
@@ -149,7 +187,6 @@ public class GameManager {
             players.put(player.getUniqueId(), PlayerRole.WEREWOLF);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.WEREWOLF);
 
-            // ← AJOUT pour bStats
             if (plugin.getBStatsManager() != null) {
                 plugin.getBStatsManager().recordRoleUsage(PlayerRole.WEREWOLF);
             }
@@ -161,7 +198,6 @@ public class GameManager {
             players.put(player.getUniqueId(), PlayerRole.SEER);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.SEER);
 
-            // ← AJOUT pour bStats
             if (plugin.getBStatsManager() != null) {
                 plugin.getBStatsManager().recordRoleUsage(PlayerRole.SEER);
             }
@@ -172,7 +208,6 @@ public class GameManager {
             players.put(player.getUniqueId(), PlayerRole.GUARD);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.GUARD);
 
-            // ← AJOUT pour bStats
             if (plugin.getBStatsManager() != null) {
                 plugin.getBStatsManager().recordRoleUsage(PlayerRole.GUARD);
             }
@@ -183,7 +218,6 @@ public class GameManager {
             players.put(player.getUniqueId(), PlayerRole.WITCH);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.WITCH);
 
-            // ← AJOUT pour bStats
             if (plugin.getBStatsManager() != null) {
                 plugin.getBStatsManager().recordRoleUsage(PlayerRole.WITCH);
             }
@@ -195,7 +229,6 @@ public class GameManager {
             players.put(player.getUniqueId(), PlayerRole.VILLAGER);
             plugin.getScoreboardManager().addPlayerRole(player, PlayerRole.VILLAGER);
 
-            // ← AJOUT pour bStats
             if (plugin.getBStatsManager() != null) {
                 plugin.getBStatsManager().recordRoleUsage(PlayerRole.VILLAGER);
             }
@@ -211,6 +244,12 @@ public class GameManager {
                 player.sendMessage("§6" + "=".repeat(50));
                 player.sendMessage("");
                 player.sendMessage("§e🎭 Vous êtes : " + role.getDisplayName());
+
+                // ← NOUVEAU : Indiquer si c'est le maire
+                if (player.getUniqueId().equals(mayor)) {
+                    player.sendMessage("§6👑 Vous êtes également le MAIRE !");
+                }
+
                 player.sendMessage("");
                 player.sendMessage("§f📖 Description :");
                 player.sendMessage("§f" + role.getDescription());
@@ -244,6 +283,16 @@ public class GameManager {
         // Effet de nuit SEULEMENT pour les joueurs dans la partie
         setTimeForPlayers(18000);
 
+        // ← NOUVEAU : Appliquer l'effet de cécité si configuré
+        if (plugin.getConfigManager().getConfig().getBoolean("game.blindness-at-night", true)) {
+            applyBlindnessEffect();
+        }
+
+        // ← NOUVEAU : Immobiliser les joueurs si configuré
+        if (plugin.getConfigManager().getConfig().getBoolean("game.freeze-players-at-night", false)) {
+            freezePlayers();
+        }
+
         // Instructions pour chaque rôle
         sendNightInstructions();
 
@@ -251,7 +300,7 @@ public class GameManager {
         int nightDuration = plugin.getConfigManager().getNightDuration();
         broadcastMessage("§9⏰ Phase de nuit : " + Utils.formatTime(nightDuration));
 
-        gameTask = new BukkitRunnable() {
+        phaseTimerTask = new BukkitRunnable() {
             @Override
             public void run() {
                 processNightActions();
@@ -260,6 +309,84 @@ public class GameManager {
         }.runTaskLater(plugin, nightDuration * 20L);
 
         plugin.getScoreboardManager().updateScoreboard();
+    }
+
+    // ← NOUVEAU : Appliquer la cécité
+    private void applyBlindnessEffect() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (isPlayerAlive(player) && players.containsKey(player.getUniqueId())) {
+                PlayerRole role = players.get(player.getUniqueId());
+
+                // Les loups-garous ne sont pas aveuglés
+                if (role != PlayerRole.WEREWOLF) {
+                    player.addPotionEffect(new PotionEffect(
+                            PotionEffectType.BLINDNESS,
+                            Integer.MAX_VALUE,
+                            0,
+                            false,
+                            false
+                    ));
+                }
+            }
+        }
+    }
+
+    // ← NOUVEAU : Retirer la cécité
+    private void removeBlindnessEffect() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (players.containsKey(player.getUniqueId())) {
+                player.removePotionEffect(PotionEffectType.BLINDNESS);
+            }
+        }
+    }
+
+    // ← NOUVEAU : Geler les joueurs en cercle
+    private void freezePlayers() {
+        Location spawn = plugin.getConfigManager().getSpawnLocation();
+        circleCenter = spawn;
+
+        List<Player> alivePlayers = new ArrayList<>();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (isPlayerAlive(player) && players.containsKey(player.getUniqueId())) {
+                alivePlayers.add(player);
+            }
+        }
+
+        int playerCount = alivePlayers.size();
+        double radius = Math.max(3, playerCount * 0.5); // Rayon adaptatif
+        double angleStep = 2 * Math.PI / playerCount;
+
+        for (int i = 0; i < playerCount; i++) {
+            Player player = alivePlayers.get(i);
+            double angle = i * angleStep;
+
+            double x = spawn.getX() + radius * Math.cos(angle);
+            double z = spawn.getZ() + radius * Math.sin(angle);
+
+            Location circlePos = new Location(spawn.getWorld(), x, spawn.getY(), z);
+
+            // Faire regarder vers le centre
+            circlePos.setDirection(spawn.toVector().subtract(circlePos.toVector()));
+
+            originalLocations.put(player.getUniqueId(), player.getLocation());
+            player.teleport(circlePos);
+
+            // Empêcher le mouvement
+            player.setWalkSpeed(0);
+            player.setFlySpeed(0);
+        }
+    }
+
+    // ← NOUVEAU : Dégeler les joueurs
+    private void unfreezePlayers() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (players.containsKey(player.getUniqueId())) {
+                player.setWalkSpeed(0.2f); // Vitesse par défaut
+                player.setFlySpeed(0.1f);
+            }
+        }
+        originalLocations.clear();
+        circleCenter = null;
     }
 
     private void sendNightInstructions() {
@@ -312,6 +439,10 @@ public class GameManager {
 
     private void processNightActions() {
         broadcastMessage("§9🌅 L'aube se lève... Découvrons ce qui s'est passé cette nuit.");
+
+        // ← NOUVEAU : Retirer les effets de nuit
+        removeBlindnessEffect();
+        unfreezePlayers();
 
         // Traiter les votes des loups-garous
         Map<UUID, Integer> killVotes = new HashMap<>();
@@ -400,7 +531,7 @@ public class GameManager {
         broadcastMessage("§e💬 Phase de discussion ! (" + Utils.formatTime(dayDuration) + ")");
         broadcastMessage("§e🗣️ C'est le moment de débattre et de trouver les coupables !");
 
-        gameTask = new BukkitRunnable() {
+        phaseTimerTask = new BukkitRunnable() {
             @Override
             public void run() {
                 startVotePhase();
@@ -425,7 +556,7 @@ public class GameManager {
         int voteDuration = plugin.getConfigManager().getVoteDuration();
         broadcastMessage("§c⏰ Vous avez " + Utils.formatTime(voteDuration) + " pour voter !");
 
-        gameTask = new BukkitRunnable() {
+        phaseTimerTask = new BukkitRunnable() {
             @Override
             public void run() {
                 processVotes();
@@ -433,6 +564,31 @@ public class GameManager {
         }.runTaskLater(plugin, voteDuration * 20L);
 
         plugin.getScoreboardManager().updateScoreboard();
+    }
+
+    // ← NOUVEAU : Vérifier si tout le monde a voté
+    public void checkAllVoted() {
+        if (currentState != GameState.VOTE) return;
+
+        int alivePlayers = getAlivePlayersCount();
+        int votedPlayers = 0;
+
+        for (UUID voterId : votes.keySet()) {
+            if (isPlayerAlive(Bukkit.getPlayer(voterId))) {
+                votedPlayers++;
+            }
+        }
+
+        if (votedPlayers >= alivePlayers) {
+            // Tout le monde a voté, annuler le timer et traiter immédiatement
+            if (phaseTimerTask != null && !phaseTimerTask.isCancelled()) {
+                phaseTimerTask.cancel();
+            }
+
+            broadcastMessage("§a✅ Tous les joueurs ont voté ! Dépouillement immédiat...");
+
+            Bukkit.getScheduler().runTaskLater(plugin, this::processVotes, 40L); // 2 secondes de délai
+        }
     }
 
     private void processVotes() {
@@ -476,13 +632,17 @@ public class GameManager {
                 int maxVotes = sortedVotes.get(0).getValue();
 
                 // Vérifier s'il y a égalité
-                long playersWithMaxVotes = sortedVotes.stream()
-                        .mapToInt(Map.Entry::getValue)
-                        .filter(votes -> votes == maxVotes)
-                        .count();
+                List<UUID> tiedPlayers = new ArrayList<>();
+                for (Map.Entry<UUID, Integer> entry : sortedVotes) {
+                    if (entry.getValue() == maxVotes) {
+                        tiedPlayers.add(entry.getKey());
+                    }
+                }
 
-                if (playersWithMaxVotes > 1) {
-                    broadcastMessage("§c⚖️ Égalité ! Personne n'est éliminé.");
+                if (tiedPlayers.size() > 1) {
+                    // ← NOUVEAU : Égalité, le maire décide
+                    handleTieVote(tiedPlayers);
+                    return; // On arrête ici, le maire va décider
                 } else {
                     Player eliminatedPlayer = Bukkit.getPlayer(mostVoted);
                     if (eliminatedPlayer != null) {
@@ -501,15 +661,124 @@ public class GameManager {
         }
     }
 
+    // ← NOUVEAU : Gestion de l'égalité avec le maire
+    private void handleTieVote(List<UUID> tiedPlayers) {
+        Player mayorPlayer = Bukkit.getPlayer(mayor);
+
+        if (mayorPlayer == null || !isPlayerAlive(mayorPlayer)) {
+            broadcastMessage("§c⚖️ Égalité ! Le maire est mort, personne n'est éliminé.");
+            // Continuer avec une nouvelle nuit
+            Bukkit.getScheduler().runTaskLater(plugin, this::startNight, 100L);
+            return;
+        }
+
+        currentState = GameState.MAYOR_VOTE;
+        broadcastMessage("§6👑 === VOTE DU MAIRE ===");
+        broadcastMessage("§e⚖️ Égalité détectée ! Le maire doit choisir.");
+
+        StringBuilder tiedMessage = new StringBuilder("§eJoueurs à égalité : ");
+        for (int i = 0; i < tiedPlayers.size(); i++) {
+            Player p = Bukkit.getPlayer(tiedPlayers.get(i));
+            if (p != null) {
+                tiedMessage.append("§f").append(p.getName());
+                if (i < tiedPlayers.size() - 1) {
+                    tiedMessage.append("§e, ");
+                }
+            }
+        }
+        broadcastMessage(tiedMessage.toString());
+
+        mayorPlayer.sendMessage("§6" + "=".repeat(50));
+        mayorPlayer.sendMessage(Utils.centerText("§6§l👑 DÉCISION DU MAIRE 👑", 50));
+        mayorPlayer.sendMessage("§6" + "=".repeat(50));
+        mayorPlayer.sendMessage("§e⚖️ Il y a égalité ! Vous devez choisir qui éliminer.");
+        mayorPlayer.sendMessage("§e💡 Utilisez : §f/vote <joueur>");
+        mayorPlayer.sendMessage("");
+        mayorPlayer.sendMessage("§eCandidats :");
+        for (UUID uuid : tiedPlayers) {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null) {
+                mayorPlayer.sendMessage("§f  - " + p.getName());
+            }
+        }
+        mayorPlayer.sendMessage("§6" + "=".repeat(50));
+
+        mayorPlayer.playSound(mayorPlayer.getLocation(), Sound.BLOCK_BELL_USE, 1.0f, 1.0f);
+
+        // Stocker temporairement les joueurs à égalité
+        votes.clear();
+        for (UUID uuid : tiedPlayers) {
+            votes.put(uuid, uuid); // Marquer comme candidats
+        }
+
+        // Timer pour la décision du maire (30 secondes)
+        phaseTimerTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                // Si le maire n'a pas voté, éliminer aléatoirement
+                processMayorVote(tiedPlayers);
+            }
+        }.runTaskLater(plugin, 600L); // 30 secondes
+    }
+
+    // ← NOUVEAU : Traiter le vote du maire
+    private void processMayorVote(List<UUID> tiedPlayers) {
+        Player mayorPlayer = Bukkit.getPlayer(mayor);
+
+        // Vérifier si le maire a voté
+        UUID mayorChoice = null;
+        if (votes.containsKey(mayor)) {
+            mayorChoice = votes.get(mayor);
+
+            // Vérifier que le choix est valide (dans la liste des égalités)
+            if (!tiedPlayers.contains(mayorChoice)) {
+                mayorChoice = null;
+            }
+        }
+
+        Player eliminatedPlayer;
+        if (mayorChoice != null) {
+            eliminatedPlayer = Bukkit.getPlayer(mayorChoice);
+            broadcastMessage("§6👑 Le maire a choisi : §c" + eliminatedPlayer.getName());
+        } else {
+            // Le maire n'a pas voté ou vote invalide, choix aléatoire
+            UUID randomChoice = tiedPlayers.get(new Random().nextInt(tiedPlayers.size()));
+            eliminatedPlayer = Bukkit.getPlayer(randomChoice);
+            broadcastMessage("§6⏰ Le maire n'a pas décidé à temps ! Choix aléatoire : §c" + eliminatedPlayer.getName());
+        }
+
+        if (eliminatedPlayer != null) {
+            eliminatePlayer(eliminatedPlayer, "éliminé par décision du maire");
+        }
+
+        // Vérifier les conditions de victoire
+        if (!checkWinConditions()) {
+            // Continuer avec une nouvelle nuit
+            Bukkit.getScheduler().runTaskLater(plugin, this::startNight, 100L);
+        }
+    }
+
     private void eliminatePlayer(Player player, String reason) {
         PlayerRole role = players.get(player.getUniqueId());
+
+        // ← NOUVEAU : Marquer comme mort
+        deadPlayers.add(player.getUniqueId());
 
         broadcastMessage("§c💀 " + player.getName() + " a été " + reason + " !");
         broadcastMessage("§6🎭 " + player.getName() + " était : " + (role != null ? role.getDisplayName() : "§aVillageois"));
 
+        // ← NOUVEAU : Transférer le rôle de maire si nécessaire
+        if (player.getUniqueId().equals(mayor)) {
+            transferMayorRole(player);
+        }
+
         // Effets visuels et sonores
         SoundManager.playElimination();
+
+        // ← CORRECTION : Bien mettre en spectateur
         player.setGameMode(GameMode.SPECTATOR);
+        player.setAllowFlight(true);
+        player.setFlying(true);
 
         // Titre dramatique pour tous
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -522,6 +791,64 @@ public class GameManager {
         // Message privé au joueur éliminé
         player.sendMessage("§c💀 Vous avez été éliminé ! Vous pouvez maintenant observer la partie.");
         player.sendMessage("§7💬 Chattez avec les autres morts ou observez la suite...");
+        player.sendMessage("§7👻 Vous êtes maintenant en mode spectateur.");
+    }
+
+    // ← NOUVEAU : Transférer le rôle de maire à un autre joueur
+    private void transferMayorRole(Player deadMayor) {
+        broadcastMessage("§6💔 Le maire est mort ! Il doit choisir son successeur...");
+
+        deadMayor.sendMessage("§6" + "=".repeat(50));
+        deadMayor.sendMessage(Utils.centerText("§6§l👑 DÉSIGNATION DU SUCCESSEUR 👑", 50));
+        deadMayor.sendMessage("§6" + "=".repeat(50));
+        deadMayor.sendMessage("§e💀 Vous êtes mort, mais vous devez désigner un nouveau maire.");
+        deadMayor.sendMessage("§e💡 Utilisez : §f/lg maire <joueur>");
+        deadMayor.sendMessage("");
+        deadMayor.sendMessage("§eJoueurs vivants :");
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (isPlayerAlive(p)) {
+                deadMayor.sendMessage("§f  - " + p.getName());
+            }
+        }
+        deadMayor.sendMessage("§6" + "=".repeat(50));
+
+        // Timer de 20 secondes pour choisir
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            // Si pas de choix, désigner aléatoirement
+            if (Bukkit.getPlayer(mayor) != null && !isPlayerAlive(Bukkit.getPlayer(mayor))) {
+                List<Player> alivePlayers = new ArrayList<>();
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (isPlayerAlive(p)) {
+                        alivePlayers.add(p);
+                    }
+                }
+
+                if (!alivePlayers.isEmpty()) {
+                    Player newMayor = alivePlayers.get(new Random().nextInt(alivePlayers.size()));
+                    setNewMayor(newMayor, true);
+                }
+            }
+        }, 400L); // 20 secondes
+    }
+
+    // ← NOUVEAU : Définir un nouveau maire
+    public void setNewMayor(Player newMayor, boolean random) {
+        mayor = newMayor.getUniqueId();
+
+        if (random) {
+            broadcastMessage("§6👑 Aucun successeur désigné ! §e" + newMayor.getName() + " §6devient maire par défaut !");
+        } else {
+            broadcastMessage("§6👑 §e" + newMayor.getName() + " §6est le nouveau maire du village !");
+        }
+
+        newMayor.sendMessage("§6" + "=".repeat(50));
+        newMayor.sendMessage(Utils.centerText("§6§l👑 VOUS ÊTES LE NOUVEAU MAIRE 👑", 50));
+        newMayor.sendMessage("§6" + "=".repeat(50));
+        newMayor.sendMessage("§e🎖️ Vous avez été désigné comme nouveau maire !");
+        newMayor.sendMessage("§7💡 En cas d'égalité, vous choisirez qui éliminer.");
+        newMayor.sendMessage("§6" + "=".repeat(50));
+
+        newMayor.playSound(newMayor.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
     }
 
     private boolean checkWinConditions() {
@@ -567,8 +894,16 @@ public class GameManager {
             gameTask.cancel();
         }
 
-        // ← AJOUT pour bStats : Enregistrer les statistiques de la partie
-        long gameDuration = (System.currentTimeMillis() - gameStartTime) / 1000; // en secondes
+        if (phaseTimerTask != null) {
+            phaseTimerTask.cancel();
+        }
+
+        // ← NOUVEAU : Nettoyer les effets
+        removeBlindnessEffect();
+        unfreezePlayers();
+
+        // Enregistrer les statistiques de la partie
+        long gameDuration = (System.currentTimeMillis() - gameStartTime) / 1000;
         int playerCount = players.size();
 
         if (plugin.getBStatsManager() != null) {
@@ -590,7 +925,8 @@ public class GameManager {
             PlayerRole role = players.get(player.getUniqueId());
             if (role != null) {
                 String status = isPlayerAlive(player) ? "§a✅" : "§c💀";
-                broadcastMessage(status + " §f" + player.getName() + " §7: " + role.getDisplayName());
+                String mayorBadge = player.getUniqueId().equals(mayor) ? " §6👑" : "";
+                broadcastMessage(status + " §f" + player.getName() + mayorBadge + " §7: " + role.getDisplayName());
             }
         }
 
@@ -614,6 +950,8 @@ public class GameManager {
             player.sendTitle(title, subtitle, 20, 100, 40);
             player.setGameMode(GameMode.SURVIVAL);
             player.resetPlayerTime();
+            player.setWalkSpeed(0.2f);
+            player.setFlySpeed(0.1f);
         }
 
         broadcastMessage("");
@@ -629,6 +967,14 @@ public class GameManager {
         if (gameTask != null) {
             gameTask.cancel();
         }
+        if (phaseTimerTask != null) {
+            phaseTimerTask.cancel();
+        }
+
+        // ← NOUVEAU : Nettoyer les effets
+        removeBlindnessEffect();
+        unfreezePlayers();
+
         resetGame();
         broadcastMessage("§c⛔ La partie a été arrêtée par un administrateur.");
     }
@@ -641,6 +987,9 @@ public class GameManager {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.setGameMode(GameMode.SURVIVAL);
             player.resetPlayerTime();
+            player.setWalkSpeed(0.2f);
+            player.setFlySpeed(0.1f);
+            player.removePotionEffect(PotionEffectType.BLINDNESS);
         }
 
         broadcastMessage("§a🔄 Partie réinitialisée ! Utilisez /lg start pour commencer une nouvelle partie.");
@@ -648,7 +997,6 @@ public class GameManager {
     }
 
     private void setupGameEnvironment() {
-        // Configurer l'environnement de jeu
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.setHealth(20.0);
             player.setFoodLevel(20);
@@ -658,11 +1006,10 @@ public class GameManager {
     }
 
     private void teleportPlayersToGame() {
-        // Téléporter tous les joueurs au spawn configuré
         Location gameLocation = plugin.getConfigManager().getSpawnLocation();
 
         if (gameLocation == null) {
-            plugin.getLogger().warning("⚠️ Impossible de récupérer le spawn configuré, utilisation du spawn par défaut");
+            plugin.getLogger().warning("⚠️ Impossible de récupérer le spawn configuré");
             World world = Bukkit.getWorld(plugin.getConfigManager().getSpawnWorld());
             if (world == null) {
                 world = Bukkit.getWorlds().get(0);
@@ -683,7 +1030,6 @@ public class GameManager {
         broadcastMessage("§a👥 Joueurs vivants : " + getAlivePlayersCount());
         showAlivePlayers();
 
-        // Statistiques des équipes
         int werewolves = 0, villagers = 0;
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (isPlayerAlive(player)) {
@@ -699,14 +1045,13 @@ public class GameManager {
         broadcastMessage("§c🐺 Loups restants : " + werewolves + " §7| §a👥 Village : " + villagers);
     }
 
-    // Méthodes utilitaires
     private void broadcastMessage(String message) {
         Bukkit.broadcastMessage(plugin.getConfigManager().getMessagePrefix() + " " + message);
     }
 
     public boolean isPlayerAlive(Player player) {
         return player != null && player.isOnline() &&
-                player.getGameMode() != GameMode.SPECTATOR &&
+                !deadPlayers.contains(player.getUniqueId()) &&
                 players.containsKey(player.getUniqueId());
     }
 
@@ -751,7 +1096,6 @@ public class GameManager {
         }
     }
 
-    // Méthodes pour gérer les actions spéciales des rôles
     public void setProtectedPlayer(UUID playerId) {
         this.protectedPlayer = playerId;
     }
@@ -811,14 +1155,33 @@ public class GameManager {
     }
 
     public boolean addVote(UUID voter, UUID target) {
-        if (!isPlayerAlive(Bukkit.getPlayer(voter)) || !isPlayerAlive(Bukkit.getPlayer(target))) {
+        if (currentState == GameState.MAYOR_VOTE) {
+            // Seul le maire peut voter
+            if (!voter.equals(mayor)) {
+                return false;
+            }
+            // Vérifier que la cible est dans les candidats
+            if (!votes.containsKey(target)) {
+                return false;
+            }
+        } else if (currentState == GameState.VOTE) {
+            if (!isPlayerAlive(Bukkit.getPlayer(voter)) || !isPlayerAlive(Bukkit.getPlayer(target))) {
+                return false;
+            }
+        } else {
             return false;
         }
+
         votes.put(voter, target);
+
+        // ← NOUVEAU : Vérifier si tout le monde a voté
+        if (currentState == GameState.VOTE) {
+            checkAllVoted();
+        }
+
         return true;
     }
 
-    // Getters
     public GameState getCurrentState() {
         return currentState;
     }
@@ -835,9 +1198,10 @@ public class GameManager {
         return dayNumber;
     }
 
-    /**
-     * Change le temps uniquement pour les joueurs en partie
-     */
+    public UUID getMayor() {
+        return mayor;
+    }
+
     private void setTimeForPlayers(long time) {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (players.containsKey(player.getUniqueId())) {

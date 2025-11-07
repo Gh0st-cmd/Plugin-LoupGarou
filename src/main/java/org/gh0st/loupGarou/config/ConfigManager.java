@@ -56,6 +56,11 @@ public class ConfigManager {
         config.set("game.auto-restart", true);
         config.set("game.restart-delay", 30);
 
+        // Options de gameplay
+        config.set("game.enable-mayor", true); // Activer le système de maire
+        config.set("game.blindness-at-night", true); // Effet de cécité la nuit
+        config.set("game.freeze-players-at-night", false); // Immobiliser les joueurs la nuit
+
         // Configuration du spawn
         config.set("spawn.world", "minijeux");
         config.set("spawn.x", 0.5);
@@ -380,5 +385,17 @@ public class ConfigManager {
 
     public boolean isVerboseDebug() {
         return config.getBoolean("debug.verbose", false);
+    }
+
+    public boolean isMayorEnabled() {
+        return config.getBoolean("game.enable-mayor", true);
+    }
+
+    public boolean isBlindnessAtNightEnabled() {
+        return config.getBoolean("game.blindness-at-night", true);
+    }
+
+    public boolean isFreezingAtNightEnabled() {
+        return config.getBoolean("game.freeze-players-at-night", false);
     }
 }
