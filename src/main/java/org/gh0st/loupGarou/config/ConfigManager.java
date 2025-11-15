@@ -78,6 +78,7 @@ public class ConfigManager {
         config.set("game.enable-mayor", true); // Activer le système de maire
         config.set("game.blindness-at-night", true); // Effet de cécité la nuit
         config.set("game.freeze-players-at-night", false); // Immobiliser les joueurs la nuit
+        config.set("game.freeze-players-during-vote", true); // Immobiliser les joueurs pendant le vote
 
         // Configuration du spawn
         config.set("spawn.world", "minijeux");
@@ -225,6 +226,10 @@ public class ConfigManager {
         // Ajout de l'immobilisation des joueurs la nuit
         if (!config.contains("game.freeze-players-at-night")) {
             config.set("game.freeze-players-at-night", false);
+            modified = true;
+        }
+        if (!config.contains("game.freeze-players-during-vote")) {
+            config.set("game.freeze-players-during-vote", true);
             modified = true;
         }
 
@@ -455,5 +460,9 @@ public class ConfigManager {
 
     public boolean isFreezingAtNightEnabled() {
         return config.getBoolean("game.freeze-players-at-night", false);
+    }
+
+    public boolean isFreezingDuringVoteEnabled() {
+        return config.getBoolean("game.freeze-players-during-vote", true);
     }
 }

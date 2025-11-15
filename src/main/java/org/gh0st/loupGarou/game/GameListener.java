@@ -108,6 +108,11 @@ public class GameListener implements Listener {
                 }
             }
 
+            // Si le maire quitte, transférer son rôle
+            if (player.getUniqueId().equals(gm.getMayor())) {
+                gm.transferMayorRoleOnQuit();
+            }
+
             // Vérifier les conditions de victoire après un délai
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (gm.isGameRunning()) {

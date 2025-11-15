@@ -545,6 +545,10 @@ public class GameManager {
         currentState = GameState.VOTE;
         votes.clear();
 
+        if (plugin.getConfigManager().isFreezingDuringVoteEnabled()) {
+            freezePlayers();
+        }
+
         broadcastMessage(Messages.VOTE_START);
         broadcastMessage(Messages.VOTE_DESCRIPTION);
         broadcastMessage("§e💡 Utilisez : §f/vote <joueur> §epour voter");
@@ -653,6 +657,10 @@ public class GameManager {
         }
 
         broadcastMessage("§e👥 Total des votants : " + voters.size() + "/" + getAlivePlayersCount());
+
+        if (plugin.getConfigManager().isFreezingDuringVoteEnabled()) {
+            unfreezePlayers();
+        }
 
         // Vérifier les conditions de victoire
         if (!checkWinConditions()) {
@@ -849,6 +857,33 @@ public class GameManager {
         newMayor.sendMessage("§6" + "=".repeat(50));
 
         newMayor.playSound(newMayor.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+    }
+
+    /**
+     * Gère le transfert du rôle de maire lorsqu'un maire se déconnecte.
+     * Le rôle est attribué aléatoirement à un autre joueur vivant.
+     */
+    public void transferMayorRoleOnQuit() {
+        broadcastMessage("§6💔 Le maire a quitté la partie ! Un nouveau maire va être désigné...");
+
+        // Créer une liste de candidats (tous les joueurs vivants sauf le maire actuel)
+        List<Player> candidates = new ArrayList<>();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (isPlayerAlive(p) && !p.getUniqueId().equals(mayor)) {
+                candidates.add(p);
+            }
+        }
+
+        // S'il y a des candidats, choisir un nouveau maire au hasard
+        if (!candidates.isEmpty()) {
+            Player newMayor = candidates.get(new Random().nextInt(candidates.size()));
+            // Utiliser un petit délai pour que le message soit plus naturel
+            Bukkit.getScheduler().runTaskLater(plugin, () -> setNewMayor(newMayor, true), 40L); // 2 secondes
+        } else {
+            // S'il n'y a pas d'autres joueurs, le rôle de maire est perdu
+            mayor = null;
+            broadcastMessage("§cIl n'y a plus de joueurs pour devenir maire.");
+        }
     }
 
     private boolean checkWinConditions() {
@@ -1165,6 +1200,14 @@ public class GameManager {
                 return false;
             }
         } else if (currentState == GameState.VOTE) {
+            if (!isPlayerAlive(Bukkit.getPlayer(voter)) || !isPlayerAlive(Bukkit.getPlayer(target))) {
+                return false;
+            }
+        } else if (currentState == GameState.NIGHT) {
+            // This is a werewolf vote
+            if (players.get(voter) != PlayerRole.WEREWOLF) {
+                return false; // Only werewolves can vote at night
+            }
             if (!isPlayerAlive(Bukkit.getPlayer(voter)) || !isPlayerAlive(Bukkit.getPlayer(target))) {
                 return false;
             }
