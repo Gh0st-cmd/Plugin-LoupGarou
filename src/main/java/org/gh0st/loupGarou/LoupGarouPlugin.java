@@ -61,8 +61,12 @@ public class LoupGarouPlugin extends JavaPlugin {
             getLogger().info("✅ ScoreboardManager initialisé");
 
             // 5. Intégration WorldGuard
-            this.worldGuardIntegration = new WorldGuardIntegration(this);
-            getLogger().info("✅ WorldGuardIntegration initialisé");
+            if (getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+                this.worldGuardIntegration = new WorldGuardIntegration(this);
+                getLogger().info("✅ WorldGuardIntegration initialisé");
+            } else {
+                getLogger().info("ℹ️ WorldGuard non trouvé, intégration désactivée.");
+            }
 
         } catch (Exception e) {
             getLogger().severe("❌ Erreur lors de l'initialisation des managers : " + e.getMessage());
@@ -222,18 +226,10 @@ public class LoupGarouPlugin extends JavaPlugin {
             }
         }
 
-        // Remettre les joueurs en mode normal
-        try {
-            Bukkit.getOnlinePlayers().forEach(player -> {
-                player.setGameMode(org.bukkit.GameMode.SURVIVAL);
-                player.resetPlayerTime();
-                // Retirer le scoreboard personnalisé
-                player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
-            });
-            getLogger().info("✅ Joueurs remis en mode normal");
-        } catch (Exception e) {
-            getLogger().warning("⚠️ Erreur lors de la remise en mode normal : " + e.getMessage());
-        }
+        // Remettre les joueurs en mode normal uniquement si une partie était en cours ou forcée
+        // Le GameManager.stopGame() s'occupe déjà de reset les joueurs de la partie.
+        // On ne touche pas aux joueurs qui n'ont rien à voir avec le jeu.
+        getLogger().info("✅ Plugin arrêté.");
 
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "╔════════════════════════════════════╗");
         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "║   🐺 Plugin Loup-Garou arrêté 🐺     ║");

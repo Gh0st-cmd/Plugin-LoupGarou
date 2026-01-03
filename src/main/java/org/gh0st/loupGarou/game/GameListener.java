@@ -52,7 +52,7 @@ public class GameListener implements Listener {
             event.setJoinMessage("§7[§a+§7] §e" + player.getName() + " §7a rejoint le serveur");
 
             // Vérifier si le joueur est dans la bonne région (uniquement si configuré)
-            if (plugin.getConfigManager().shouldCheckOnJoin() && wg.isWorldGuardAvailable()) {
+            if (plugin.getConfigManager().shouldCheckOnJoin() && wg != null && wg.isWorldGuardAvailable()) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     if (wg.canPlayerPlay(player)) {
                         player.sendMessage("§a👋 Bienvenue dans la zone Loup-Garou !");

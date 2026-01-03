@@ -1,6 +1,6 @@
 # 🐺 Plugin Loup-Garou pour Minecraft
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.8-brightgreen.svg)](https://www.minecraft.net/)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21--1.21.11-brightgreen.svg)](https://www.minecraft.net/)
 [![Spigot](https://img.shields.io/badge/Spigot-Compatible-orange.svg)](https://www.spigotmc.org/)
 [![Paper](https://img.shields.io/badge/Paper-Compatible-blue.svg)](https://papermc.io/)
 [![Java](https://img.shields.io/badge/Java-17+-red.svg)](https://www.oracle.com/java/)
@@ -47,7 +47,7 @@
 ## 🚀 Installation
 
 ### Prérequis
-- **Minecraft** 1.21+ (Spigot/Paper)
+- **Minecraft** 1.21 à 1.21.11 (Spigot/Paper)
 - **Java** 17 ou supérieur
 - **WorldGuard** 7.0+ (optionnel)
 

@@ -5,36 +5,40 @@ import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
 import org.gh0st.loupGarou.role.PlayerRole;
 
+import java.util.Collection;
+
 public class SoundManager {
 
-    private static void playToAll(Sound sound, float volume, float pitch) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.playSound(player.getLocation(), sound, volume, pitch);
+    private static void playToPlayers(Collection<Player> players, Sound sound, float volume, float pitch) {
+        for (Player player : players) {
+            if (player != null && player.isOnline()) {
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
         }
     }
 
-    public static void playGameStart() {
-        playToAll(Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.2f);
+    public static void playGameStart(Collection<Player> players) {
+        playToPlayers(players, Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.2f);
     }
 
-    public static void playNightStart() {
-        playToAll(Sound.ENTITY_WOLF_GROWL, 1.0f, 0.8f);
+    public static void playNightStart(Collection<Player> players) {
+        playToPlayers(players, Sound.ENTITY_WOLF_GROWL, 1.0f, 0.8f);
     }
 
-    public static void playDayStart() {
-        playToAll(Sound.ENTITY_CHICKEN_HURT, 1.0f, 1.0f);
+    public static void playDayStart(Collection<Player> players) {
+        playToPlayers(players, Sound.ENTITY_CHICKEN_HURT, 1.0f, 1.0f);
     }
 
-    public static void playVoteStart() {
-        playToAll(Sound.BLOCK_ANVIL_LAND, 0.7f, 1.2f);
+    public static void playVoteStart(Collection<Player> players) {
+        playToPlayers(players, Sound.BLOCK_ANVIL_LAND, 0.7f, 1.2f);
     }
 
-    public static void playElimination() {
-        playToAll(Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
+    public static void playElimination(Collection<Player> players) {
+        playToPlayers(players, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
     }
 
-    public static void playVictory() {
-        playToAll(Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+    public static void playVictory(Collection<Player> players) {
+        playToPlayers(players, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
     }
 
     public static void playRoleReveal(Player player, PlayerRole role) {
@@ -70,7 +74,7 @@ public class SoundManager {
         player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
     }
 
-    public static void playWarning() {
-        playToAll(Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 0.8f);
+    public static void playWarning(Collection<Player> players) {
+        playToPlayers(players, Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 0.8f);
     }
 }
